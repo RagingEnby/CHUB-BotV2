@@ -1,1 +1,4 @@
-BOT_TOKEN: str = "12345"
+BOT_TOKEN: str = (
+    "12345"
+)
+HYPIXEL_API_KEY: str = "12345"

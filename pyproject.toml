@@ -5,6 +5,7 @@ description = "A complete recode of the CHUB Bot"
 readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
+    "curl-cffi>=0.13.0",
     "disnake>=2.11.0",
     "motor>=3.7.1",
     "pymongo>=4.15.3",

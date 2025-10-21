@@ -11,3 +11,4 @@ OWNER_IDS: set[int] = {
 
 # load secrets
 BOT_TOKEN: str = scrts.BOT_TOKEN
+HYPIXEL_API_KEY: str = scrts.HYPIXEL_API_KEY
