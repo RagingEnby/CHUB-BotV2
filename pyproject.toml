@@ -6,4 +6,6 @@ readme = "README.md"
 requires-python = ">=3.14"
 dependencies = [
     "disnake>=2.11.0",
+    "motor>=3.7.1",
+    "pymongo>=4.15.3",
 ]
