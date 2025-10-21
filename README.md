@@ -1,0 +1,1 @@
+Official repository for the recode of [CHUB Bot](https://github.com/RagingEnby/CHUB-Bot). A bot made for the [Collector's Hub](https://discord.com/invite/HqyfTBe6Dj) Discord server.
