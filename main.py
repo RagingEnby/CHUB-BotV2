@@ -5,6 +5,7 @@ import signal
 
 from modules import asyncreqs
 import constants
+import cogs
 
 
 bot = commands.InteractionBot(
@@ -34,6 +35,7 @@ bot = commands.InteractionBot(
     ),
     owner_ids=constants.OWNER_IDS,
 )
+cogs.load(bot)
 
 
 @bot.event
