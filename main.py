@@ -33,7 +33,8 @@ bot = commands.InteractionBot(
         voice_states=False,
         webhooks=False,
     ),
-    owner_ids=constants.OWNER_IDS,
+    owner_ids=constants.OWNER_USER_IDS,
+    test_guilds=[constants.GUILD_ID],
 )
 cogs.load(bot)
 
@@ -42,9 +43,9 @@ cogs.load(bot)
 async def on_ready():
     def signal_handler(*_):
         asyncio.create_task(close())
-        signal.signal(signal.SIGINT, signal_handler)
-        signal.signal(signal.SIGTERM, signal_handler)
 
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     print(f"Logged in as {bot.user}")
 
 

@@ -1,6 +1,8 @@
 from disnake.ext import commands
 
 from .linking import LinkingCog
+from .botstatus import BotStatusCog
+from .utilscog import UtilsCog
 
 
 def load(bot: commands.InteractionBot):
@@ -11,4 +13,6 @@ def load(bot: commands.InteractionBot):
 
 __all__ = [
     "LinkingCog",
+    "BotStatusCog",
+    "UtilsCog",
 ]

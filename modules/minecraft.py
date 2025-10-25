@@ -15,6 +15,10 @@ class Player:
     def avatar(self) -> str:
         return constants.MC_AVATAR_URL.format(self.uuid)
 
+    @property
+    def namemc(self) -> str:
+        return constants.NAMEMC_URL.format(self.name)
+
     def __str__(self) -> str:
         return self.name
 
