@@ -42,6 +42,7 @@ class MojangAPIError(Exception):
 
 class PlayerNotFound(MojangAPIError):
     def __init__(self, identifier: str):
+        self.identifier = identifier
         super().__init__(f"Player not found: {identifier}", 404)
 
 

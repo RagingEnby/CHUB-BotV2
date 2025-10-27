@@ -6,7 +6,8 @@ from contextlib import suppress
 from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
-    from cogs import UtilsCog
+    from cogs import UtilsCog, LinkingCog
+from modules import minecraft
 import constants
 
 
@@ -14,7 +15,7 @@ def format_error(e: commands.CommandError) -> str:
     return "".join(traceback.format_exception(type(e), e, e.__traceback__))
 
 
-class BotStatusCog(commands.Cog):
+class LoggerCog(commands.Cog):
     def __init__(self, bot: commands.InteractionBot):
         self.bot = bot
         self.first_start = True
@@ -23,6 +24,10 @@ class BotStatusCog(commands.Cog):
     @property
     def UtilsCog(self) -> "UtilsCog":
         return cast("UtilsCog", self.bot.get_cog("UtilsCog"))
+
+    @property
+    def LinkingCog(self) -> "LinkingCog":
+        return cast("LinkingCog", self.bot.get_cog("LinkingCog"))
 
     async def log_command_error(
         self, inter: disnake.AppCmdInter, e: commands.CommandError
@@ -53,7 +58,39 @@ class BotStatusCog(commands.Cog):
         self, inter: disnake.AppCmdInter, e: commands.CommandError
     ):
         with suppress(disnake.InteractionResponded):
-            await inter.response.defer()
+            await inter.response.defer(ephemeral=True)
+        error = cast("Exception", e.original)  # type: ignore
+
+        if isinstance(e, commands.CheckFailure):
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Unauthorized",
+                    description="You do not have permission to use this command.",
+                )
+            )
+
+        if isinstance(error, minecraft.PlayerNotFound):
+            error = cast("minecraft.PlayerNotFound", error)
+            return await inter.send(
+                embed=self.UtilsCog.player_not_found_error(error.identifier)
+            )
+
+        if isinstance(error, self.LinkingCog.MismatchedDiscordError):
+            error = cast("LinkingCog.MismatchedDiscordError", error)
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Discord Mismatch",
+                    description=self.UtilsCog.to_markdown(
+                        {
+                            "IGN": error.identifier,
+                            "Your Discord": error.expected,
+                            "Linked Discord": error.real,
+                        }
+                    ),
+                )
+            )
+
+        # Unknown errors
         await asyncio.gather(
             inter.send(
                 embed=self.UtilsCog.make_error(

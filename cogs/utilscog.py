@@ -38,12 +38,15 @@ class UtilsCog(commands.Cog):
 
     @staticmethod
     def add_guild_footer(
-        embed: disnake.Embed, guild: disnake.Guild | None
+        embed: disnake.Embed, channel: disnake.abc.MessageableChannel
     ) -> disnake.Embed:
-        return embed.set_footer(
-            text=f"{guild} ({guild.id})" if guild else "DMs",
-            icon_url=guild.icon.url if guild and guild.icon else None,
-        )
+        text = "DMs"
+        icon_url = None
+        if hasattr(channel, "guild") and channel.guild:  # type: ignore
+            text = f"{channel.guild} #{channel.name}"  # type: ignore
+            if channel.guild.icon:  # type: ignore
+                icon_url = channel.guild.icon.url  # type: ignore
+        return embed.set_footer(text=text, icon_url=icon_url)
 
     @staticmethod
     def add_author_footer(
@@ -61,7 +64,7 @@ class UtilsCog(commands.Cog):
             color=disnake.Color.blurple(),
         )
         embed = UtilsCog.add_author_footer(embed, inter.author)
-        return UtilsCog.add_guild_footer(embed, inter.guild)
+        return UtilsCog.add_guild_footer(embed, inter.channel)
 
     @staticmethod
     def message_to_embed(message: disnake.Message) -> disnake.Embed:
@@ -71,7 +74,7 @@ class UtilsCog(commands.Cog):
             timestamp=message.created_at,
         )
         embed = UtilsCog.add_author_footer(embed, message.author)
-        return UtilsCog.add_guild_footer(embed, message.guild)
+        return UtilsCog.add_guild_footer(embed, message.channel)
 
     async def send_message(self, channel_id: int, *args, **kwargs) -> disnake.Message:
         channel = self.bot.get_channel(channel_id)

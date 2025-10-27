@@ -8,16 +8,6 @@ if TYPE_CHECKING:
 from modules import hypixel, minecraft
 
 
-class MismatchedDiscordError(Exception):
-    def __init__(self, expected: str, real: str | None, identifier: str):
-        self.expected = expected
-        self.real = real
-        self.identifier = identifier
-        super().__init__(
-            f"Expected Discord username {expected} but got {real} for {identifier}"
-        )
-
-
 class LinkingCog(commands.Cog):
     def __init__(self, bot: commands.InteractionBot):
         self.bot = bot
@@ -27,40 +17,44 @@ class LinkingCog(commands.Cog):
     def UtilsCog(self) -> "UtilsCog":
         return cast("UtilsCog", self.bot.get_cog("UtilsCog"))
 
+    class MismatchedDiscordError(Exception):
+        def __init__(self, expected: str, real: str | None, identifier: str):
+            self.expected = expected
+            self.real = real
+            self.identifier = identifier
+            super().__init__(
+                f"Expected Discord username {expected} but got {real} for {identifier}"
+            )
+
     async def do_hypixel_verify(self, discord_username: str, identifier: str):
         data = await hypixel.get_player(identifier)
         if data.discord != discord_username:
-            raise MismatchedDiscordError(discord_username, data.discord, identifier)
+            raise self.MismatchedDiscordError(
+                expected=discord_username, real=data.discord, identifier=identifier
+            )
+
+    async def verify(
+        self,
+        inter: disnake.AppCmdInter,
+        identifier: str,
+        member: disnake.Member | None = None,
+    ):
+        member = member or cast("disnake.Member", inter.author)
+        await self.do_hypixel_verify(member.name.lower(), identifier)
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Verification Successful",
+                description="Your Discord account has been verified with your Minecraft account.\n-# (This is a lie and just a test message)",
+            )
+        )
 
     @commands.slash_command(
         name="verify",
         description="Verify your Discord account with your Minecraft account",
     )
-    async def verify(self, inter: disnake.AppCmdInter, ign: str):
+    async def verify_command(self, inter: disnake.AppCmdInter, ign: str):
         await inter.response.defer()
-        try:
-            await self.do_hypixel_verify(inter.author.name.lower(), ign)
-            await inter.send(
-                embed=self.UtilsCog.make_success(
-                    title="Verification Successful",
-                    description="Your Discord account has been verified with your Minecraft account.\n-# (This is a lie and just a test message)",
-                )
-            )
-        except minecraft.PlayerNotFound:
-            await inter.send(embed=self.UtilsCog.player_not_found_error(ign))
-        except MismatchedDiscordError as e:
-            await inter.send(
-                embed=self.UtilsCog.make_error(
-                    title="Discord Mismatch",
-                    description=self.UtilsCog.to_markdown(
-                        {
-                            "IGN": e.identifier,
-                            "Your Discord": e.expected,
-                            "Linked Discord": e.real,
-                        }
-                    ),
-                )
-            )
+        await self.verify(inter=inter, identifier=ign)
 
     async def main(self):
         while True:
