@@ -1,11 +1,11 @@
 import asyncio
 from disnake.ext import commands
 import disnake
-from typing import TYPE_CHECKING, cast, Literal
+from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog
-from modules import hypixel, minecraft
+from modules import hypixel
 
 
 class LinkingCog(commands.Cog):
