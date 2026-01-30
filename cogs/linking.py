@@ -58,7 +58,6 @@ class LinkingCog(commands.Cog):
         ign: str = commands.Param(
             name="ign",
             description="The IGN (in game name) of your Minecraft account",
-            default=None,
             autocomplete=autocomplete.ign,
             min_length=1,
             max_length=16,

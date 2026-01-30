@@ -40,7 +40,6 @@ class AdminCog(commands.Cog):
         ign: str = commands.Param(
             name="ign",
             description="The Minecraft username to verify to the selected member",
-            default=None,
             min_length=1,
             max_length=16,
             autocomplete=autocomplete.ign,
@@ -48,7 +47,6 @@ class AdminCog(commands.Cog):
         member: disnake.Member = commands.Param(
             name="member",
             description="The member to verify the Minecraft account to",
-            default=None,
         ),
     ):
         await self.LinkingCog.verify(inter, ign, member)
