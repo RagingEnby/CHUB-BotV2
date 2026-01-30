@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog
-from modules import hypixel, autocomplete
+from modules import hypixel, autocomplete, mongodb
 
 
 class LinkingCog(commands.Cog):
@@ -79,3 +79,4 @@ class LinkingCog(commands.Cog):
         if self.task is not None and not self.task.done():
             self.task.cancel()
             self.task = None
+        self.linked_users_db.close()
