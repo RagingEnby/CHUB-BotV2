@@ -74,7 +74,15 @@ async def close():
 # this method is stolen from https://github.com/TGWaffles/Utils/blob/4c705ee0855e2a735078b216f8f78bb2143dcbc1/src/cogs/misc.py#L303
 # Since you cannot directly execute async code using exec(), we just use exec() to return a
 # callable async function and then run that.
-@bot.command(name="exec")
+@bot.command(
+    name="exec",
+    aliases=["e", "execute"],
+    parent="Admin",
+    brief="An admin debugging command allowing you to execute arbitrary code",
+    description="An admin debugging command allowing you to execute arbitrary code",
+    usage="print('Hello, world!')",
+    hidden=True,
+)
 async def exec_cmd(inter: commands.Context, *, code: str = ""):
     if not await bot.is_owner(inter.author):
         return await inter.send(
