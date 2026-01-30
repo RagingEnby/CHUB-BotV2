@@ -1,5 +1,7 @@
+import json
 from typing import Any
 import datetime
+import aiofiles
 
 from modules import asyncreqs, mojang
 import constants
@@ -108,5 +110,10 @@ class PlayerData:
 
 
 async def get_player(identifier: str) -> PlayerData:
-    data = await get("/player", ign=identifier)
+    if identifier.lower() == "ragingenby":
+        print("get_player(ragingenby), using cached data for testing...")
+        async with aiofiles.open(".ragingenby.json", "r") as f:
+            data = json.loads(await f.read())
+    else:
+        data = await get("/player", ign=identifier)
     return PlayerData(data)
