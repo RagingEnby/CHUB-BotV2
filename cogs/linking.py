@@ -57,10 +57,10 @@ class LinkingCog(commands.Cog):
         inter: disnake.AppCmdInter,
         ign: str = commands.Param(
             name="ign",
-            description="The IGN (in game name) of your Minecraft account",
+            description="The IGN (in game name) of your Minecraft account (also accepts UUIDs)",
             autocomplete=autocomplete.ign,
             min_length=1,
-            max_length=16,
+            max_length=32,
         ),
     ):
         await inter.response.defer()

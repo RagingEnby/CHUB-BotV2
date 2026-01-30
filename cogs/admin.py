@@ -39,9 +39,9 @@ class AdminCog(commands.Cog):
         inter: disnake.AppCmdInter,
         ign: str = commands.Param(
             name="ign",
-            description="The Minecraft username to verify to the selected member",
+            description="The Minecraft username to verify to the selected member (also accepts UUIDs)",
             min_length=1,
-            max_length=16,
+            max_length=32,
             autocomplete=autocomplete.ign,
         ),
         member: disnake.Member = commands.Param(
