@@ -1,14 +1,13 @@
 import asyncio
-from ctypes import cast
 import textwrap
 import traceback
-from typing import TYPE_CHECKING
+from typing import TYPE_CHECKING, cast
 import disnake
 from disnake.ext import commands
 import signal
 
 if TYPE_CHECKING:
-    from cogs import UtilsCog
+    from cogs import UtilsCog as UtilsCogType
 from modules import asyncreqs
 import constants
 import cogs
@@ -44,7 +43,7 @@ bot = commands.Bot(
     test_guilds=[constants.GUILD_ID],
 )
 cogs.load(bot)
-utils: UtilsCog = cast("UtilsCog", bot.get_cog("UtilsCog"))  # type: ignore
+UtilsCog: UtilsCogType = cast("UtilsCogType", bot.get_cog("UtilsCog"))
 
 
 @bot.event
