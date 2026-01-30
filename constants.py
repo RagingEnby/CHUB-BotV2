@@ -15,7 +15,7 @@ OWNER_USER_IDS: set[int] = {
     758304690617712651,  # Foe
 }
 
-ADMIN_IGNS: set[str] = {"RagingEnby", "Vinush", "TGWaffles", "_Foe", "t3ferrari"}
+ADMIN_IGNS: list[str] = ["RagingEnby", "Vinush", "_Foe", "TGWaffles", "t3ferrari"]
 ## Channels
 COMMAND_ERROR_CHANNEL_ID: int = 1431767322401444010
 COMMAND_LOG_CHANNEL_ID: int = 1431781003533222038
