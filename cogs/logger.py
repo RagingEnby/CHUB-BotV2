@@ -133,6 +133,16 @@ class LoggerCog(commands.Cog):
         )
 
     @commands.Cog.listener()
+    async def on_message(self, message: disnake.Message):
+        # only log DMs from humans
+        if message.guild or message.author.bot:
+            return
+        await self.UtilsCog.safe_send_message(
+            channel_id=constants.DM_LOG_CHANNEL_ID,
+            embed=self.UtilsCog.message_to_embed(message),
+        )
+
+    @commands.Cog.listener()
     async def on_ready(self):
         if not self.first_start:
             return
