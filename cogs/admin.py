@@ -4,7 +4,7 @@ from typing import TYPE_CHECKING, cast
 import asyncio
 
 if TYPE_CHECKING:
-    from cogs import LinkingCog
+    from cogs import LinkingCog, UtilsCog
 from modules import autocomplete, mojang
 import constants
 
@@ -16,6 +16,10 @@ class AdminCog(commands.Cog):
     @property
     def LinkingCog(self) -> "LinkingCog":
         return cast("LinkingCog", self.bot.get_cog("LinkingCog"))
+
+    @property
+    def UtilsCog(self) -> "UtilsCog":
+        return cast("UtilsCog", self.bot.get_cog("UtilsCog"))
 
     async def cog_slash_command_check(self, inter: disnake.AppCmdInter) -> bool:
         if isinstance(inter.author, disnake.User):
@@ -61,7 +65,7 @@ class AdminCog(commands.Cog):
 
     @force.sub_command(
         name="verify",
-        description="Forcefully verify a Minecraft account to a user without checking if they own the account. **USE VERY RARELY**",
+        description="Forcefully verify a Minecraft account to a user. **USE VERY RARELY**",
     )
     async def bypass_verification(
         self,
@@ -85,4 +89,16 @@ class AdminCog(commands.Cog):
         player, _ = await asyncio.gather(
             mojang.get_player(ign),
             inter.response.defer(),
+        )
+        await self.LinkingCog.log_verification(
+            discord_id=member.id,
+            uuid=player.uuid,
+            source="manual",
+            manual_reason=f"[{inter.author.id}] {reason}",
+        )
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Verification Successful",
+                description="The Minecraft account has been linked to the Discord account.",
+            )
         )
