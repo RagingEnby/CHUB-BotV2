@@ -4,6 +4,7 @@ import scrts
 BOT_TOKEN: str = scrts.BOT_TOKEN
 HYPIXEL_API_KEY: str = scrts.HYPIXEL_API_KEY
 PROXY: str = scrts.PROXY
+MONGODB_URI: str = scrts.MONGODB_URI
 
 # Discord IDs
 ## Users
