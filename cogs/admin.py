@@ -2,6 +2,9 @@ from disnake.ext import commands
 import disnake
 from typing import TYPE_CHECKING, cast
 
+from modules import autocomplete
+import constants
+
 if TYPE_CHECKING:
     from cogs import LinkingCog
 
@@ -15,7 +18,12 @@ class AdminCog(commands.Cog):
         return cast("LinkingCog", self.bot.get_cog("LinkingCog"))
 
     async def cog_slash_command_check(self, inter: disnake.AppCmdInter) -> bool:
-        return await self.bot.is_owner(inter.author)
+        if isinstance(inter.author, disnake.User):
+            return await self.bot.is_owner(inter.author)
+        return (
+            await self.bot.is_owner(inter.author)
+            or inter.author.get_role(constants.STAFF_ROLE_ID) is not None
+        )
 
     @commands.slash_command(
         name="admin", description="Admin-only commands for bot development/moderation"
@@ -28,6 +36,20 @@ class AdminCog(commands.Cog):
         description="Verify a Minecraft account with a Discord account",
     )
     async def verify(
-        self, inter: disnake.AppCmdInter, ign: str, member: disnake.Member
+        self,
+        inter: disnake.AppCmdInter,
+        ign: str = commands.Param(
+            name="ign",
+            description="The Minecraft username to verify to the selected member",
+            default=None,
+            min_length=1,
+            max_length=16,
+            autocomplete=autocomplete.ign,
+        ),
+        member: disnake.Member = commands.Param(
+            name="member",
+            description="The member to verify the Minecraft account to",
+            default=None,
+        ),
     ):
         await self.LinkingCog.verify(inter, ign, member)
