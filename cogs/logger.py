@@ -35,7 +35,7 @@ class LoggerCog(commands.Cog):
         error = format_error(e)
         print("[BotStatusCog]", error)
         embed = self.UtilsCog.inter_to_embed(inter)
-        embed.description = f"```py\n{error}\n```"
+        embed.description = f"```py\n{error[:2000]}\n```"
         embed.title = "❌ Error: " + (embed.title or "")
         embed.color = disnake.Color.red()
         try:
