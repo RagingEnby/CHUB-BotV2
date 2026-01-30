@@ -1,10 +1,11 @@
 from disnake.ext import commands
 import disnake
 from typing import TYPE_CHECKING, cast
+import asyncio
 
 if TYPE_CHECKING:
     from cogs import LinkingCog
-from modules import autocomplete
+from modules import autocomplete, mojang
 import constants
 
 
@@ -27,8 +28,8 @@ class AdminCog(commands.Cog):
     @commands.slash_command(
         name="admin", description="Admin-only commands for bot development/moderation"
     )
-    async def admin(self, inter: disnake.AppCmdInter):
-        await inter.response.defer()
+    async def admin(self, _: disnake.AppCmdInter):
+        return
 
     @admin.sub_command(
         name="verify",
