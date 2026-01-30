@@ -23,7 +23,7 @@ GUILD_ID: int = 1430328872465076417
 # URLs
 MC_AVATAR_URL: str = "http://cravatar.eu/helmavatar/{}.png"
 NAMEMC_URL: str = "https://nmc.is/{}"
-MOJANG_API_URL: str = f"https://mowojang.matdoes.dev/{}"
+MOJANG_API_URL: str = "https://mowojang.matdoes.dev/{}"
 
 # Regex
 UUID_REGEX: str = (
