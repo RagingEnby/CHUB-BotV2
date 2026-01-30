@@ -1,7 +1,7 @@
 from typing import Any
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from pymongo import UpdateOne
-from pymongo.results import BulkWriteResult, UpdateResult
+from pymongo.results import BulkWriteResult, UpdateResult, DeleteResult
 
 import constants
 
@@ -73,3 +73,11 @@ class Collection:
             .limit(limit)
             .to_list(length=limit)
         )
+
+    async def delete_one(self, query: dict[str, Any]) -> DeleteResult:
+        collection = await self.get_collection()
+        return await collection.delete_one(query)
+
+    async def delete_many(self, query: dict[str, Any]) -> DeleteResult:
+        collection = await self.get_collection()
+        return await collection.delete_many(query)
