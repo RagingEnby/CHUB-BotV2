@@ -1,4 +1,6 @@
 import asyncio
+import datetime
+from typing import Literal
 from disnake.ext import commands
 import disnake
 from typing import TYPE_CHECKING, cast
@@ -12,6 +14,7 @@ class LinkingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.task: asyncio.Task | None = None
+        self.linked_users_db = mongodb.Collection("CHUB", "linked")
 
     @property
     def UtilsCog(self) -> "UtilsCog":
@@ -26,12 +29,34 @@ class LinkingCog(commands.Cog):
                 f"Expected Discord username {expected} but got {real} for {identifier}"
             )
 
-    async def do_hypixel_verify(self, discord_username: str, identifier: str):
+    async def log_verification(
+        self,
+        discord_id: int,
+        uuid: str,
+        date: datetime.datetime,
+        source: Literal["hypixel"],
+    ):
+        await self.linked_users_db.insert(
+            {
+                "_id": discord_id,
+                "uuid": uuid,
+                "date": date,
+                "source": source,
+            }
+        )
+
+    async def ensure_hypixel_verified(self, author: disnake.Member, identifier: str):
         data = await hypixel.get_player(identifier)
-        if data.discord != discord_username:
+        if data.discord != author.name.lower():
             raise self.MismatchedDiscordError(
-                expected=discord_username, real=data.discord, identifier=identifier
+                expected=author.name.lower(), real=data.discord, identifier=identifier
             )
+        await self.log_verification(
+            discord_id=author.id,
+            uuid=data.uuid,
+            date=data.last_updated,
+            source="hypixel",
+        )
 
     async def verify(
         self,
@@ -40,7 +65,7 @@ class LinkingCog(commands.Cog):
         member: disnake.Member | None = None,
     ):
         member = member or cast("disnake.Member", inter.author)
-        await self.do_hypixel_verify(member.name.lower(), identifier)
+        await self.ensure_hypixel_verified(member, identifier)
         await inter.send(
             embed=self.UtilsCog.make_success(
                 title="Verification Successful",
