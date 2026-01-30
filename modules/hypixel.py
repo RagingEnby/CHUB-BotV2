@@ -123,6 +123,10 @@ class PlayerData:
         discord = self.socials.get("DISCORD")
         return discord.lower() if discord else None
 
+    @property
+    def rank(self) -> str | None:
+        return self.player.get("rank")
+
 
 async def get_player(player: str | mojang.Player) -> PlayerData:
     player = await mojang.get_player(player) if isinstance(player, str) else player
