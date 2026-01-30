@@ -90,12 +90,30 @@ class LoggerCog(commands.Cog):
                 )
             )
 
-        if isinstance(error, self.LinkingCog.AlreadyVerifiedError):
-            error = cast("LinkingCog.AlreadyVerifiedError", error)
+        if isinstance(error, self.LinkingCog.DiscordAlreadyVerifiedError):
+            error = cast("LinkingCog.DiscordAlreadyVerifiedError", error)
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Already Verified",
-                    description=f"You are already verified to [{error.verified_to}]({constants.NAMEMC_URL.format(error.verified_to)}), you cannot verify to two accounts at once. Please use `/unverify` and try again.",
+                    description=f"You are already verified to [{error.verified_to.name}]({constants.NAMEMC_URL.format(error.verified_to.uuid)}), you cannot verify to two accounts at once. Please use `/unverify` and try again.",
+                )
+            )
+
+        if isinstance(error, self.LinkingCog.MinecraftAlreadyVerifiedError):
+            error = cast("LinkingCog.MinecraftAlreadyVerifiedError", error)
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Already Verified",
+                    description=f"Player [{error.player.name}]({constants.NAMEMC_URL.format(error.player.uuid)}) is already verified to <@{error.verified_to}>. The same Minecraft account cannot be verified to two Discord accounts.",
+                )
+            )
+
+        if isinstance(error, self.LinkingCog.UnverifiedError):
+            error = cast("LinkingCog.UnverifiedError", error)
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Not Verified",
+                    description="This command is only accessible to verified users. Please use `/verify` and try again.",
                 )
             )
 
