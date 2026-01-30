@@ -92,8 +92,23 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
 
 
 class PlayerData:
-    def __init__(self, data: dict[str, Any]):
+    def __init__(
+        self,
+        data: dict[str, Any],
+        mojang_player: mojang.Player,
+        last_updated: datetime.datetime | None = None,
+    ):
         self.data = data
+        self.mojang_player = mojang_player
+        self.last_updated = last_updated or datetime.datetime.now()
+
+    @property
+    def name(self) -> str:
+        return self.mojang_player.name
+
+    @property
+    def uuid(self) -> str:
+        return self.mojang_player.uuid
 
     @property
     def player(self) -> dict[str, Any]:
@@ -110,10 +125,11 @@ class PlayerData:
 
 
 async def get_player(identifier: str) -> PlayerData:
-    if identifier.lower() == "ragingenby":
+    player = await mojang.get_player(identifier)
+    if player.name.lower() == "ragingenby":
         print("get_player(ragingenby), using cached data for testing...")
         async with aiofiles.open(".ragingenby.json", "r") as f:
             data = json.loads(await f.read())
     else:
         data = await get("/player", ign=identifier)
-    return PlayerData(data)
+    return PlayerData(data, mojang_player=player)
