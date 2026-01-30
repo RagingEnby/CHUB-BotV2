@@ -9,7 +9,7 @@ import constants
 
 
 class AdminCog(commands.Cog):
-    def __init__(self, bot: commands.InteractionBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @property

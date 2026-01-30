@@ -18,7 +18,7 @@ def prettify_params(options: disnake.AppCmdInter | dict) -> list[str]:
 
 
 class UtilsCog(commands.Cog):
-    def __init__(self, bot: commands.InteractionBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
 
     @property

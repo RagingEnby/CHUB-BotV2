@@ -8,7 +8,7 @@ import constants
 import cogs
 
 
-bot = commands.InteractionBot(
+bot = commands.Bot(
     intents=disnake.Intents(
         automod=False,
         automod_configuration=False,

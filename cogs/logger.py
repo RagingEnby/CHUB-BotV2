@@ -16,7 +16,7 @@ def format_error(e: commands.CommandError) -> str:
 
 
 class LoggerCog(commands.Cog):
-    def __init__(self, bot: commands.InteractionBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.first_start = True
         self.task: asyncio.Task | None = None

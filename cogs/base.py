@@ -9,7 +9,7 @@ if TYPE_CHECKING:
 
 
 class BaseCog(commands.Cog):
-    def __init__(self, bot: commands.InteractionBot):
+    def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.task: asyncio.Task | None = None
 
