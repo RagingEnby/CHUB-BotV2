@@ -15,6 +15,10 @@ async def ign(
     if not user_input:
         return []
     players = await ragingenbyapi.search_ign_stem(user_input)
-    return [
-        disnake.OptionChoice(name=player.name, value=player.uuid) for player in players
-    ]
+    return (
+        [
+            disnake.OptionChoice(name=player.name, value=player.uuid)
+            for player in players
+        ]
+        + [disnake.OptionChoice(name=user_input, value=user_input)]
+    )[:25]
