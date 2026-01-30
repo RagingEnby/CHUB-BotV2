@@ -54,8 +54,27 @@ class AdminCog(commands.Cog):
             description="The member to verify the Minecraft account to",
         ),
     ):
-        await inter.response.defer()
         await self.LinkingCog.hypixel_verify(inter, ign, member)
+
+    @admin.sub_command(
+        name="update",
+        description="Update a member's synced roles and display name",
+    )
+    async def update(
+        self,
+        inter: disnake.AppCmdInter,
+        member: disnake.Member = commands.Param(
+            name="member",
+            description="The member to update",
+        ),
+    ):
+        await self.LinkingCog.update_member(member=member)
+        return await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Updated",
+                description="The member's synced roles and display name have been updated.",
+            )
+        )
 
     @admin.sub_command_group(
         name="force", description="Force admin verification actions"
@@ -98,7 +117,7 @@ class AdminCog(commands.Cog):
         )
         await inter.send(
             embed=self.UtilsCog.make_success(
-                title="Verification Successful",
+                title="Verified",
                 description="The Minecraft account has been linked to the Discord account.",
             )
         )
