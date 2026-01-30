@@ -3,10 +3,11 @@ from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from pymongo import UpdateOne
 from pymongo.results import BulkWriteResult, UpdateResult
 
+import constants
+
 
 class Collection:
-    def __init__(self, uri: str, db: str, collection: str):
-        self.uri = uri
+    def __init__(self, db: str, collection: str):
         self.db_name = db
         self.collection_name = collection
         self._client: AsyncIOMotorClient | None = None
@@ -14,7 +15,7 @@ class Collection:
 
     async def get_client(self) -> AsyncIOMotorClient:
         if self._client is None:
-            self._client = AsyncIOMotorClient(self.uri)
+            self._client = AsyncIOMotorClient(constants.MONGODB_URI)
         return self._client
 
     async def get_collection(self) -> AsyncIOMotorCollection:
@@ -23,7 +24,7 @@ class Collection:
             self._collection = client[self.db_name][self.collection_name]
         return self._collection
 
-    async def close(self):
+    def close(self):
         if self._client is not None:
             self._client.close()
             self._client = None
