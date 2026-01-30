@@ -1,14 +1,21 @@
 import asyncio
+from ctypes import cast
+import textwrap
+import traceback
+from typing import TYPE_CHECKING
 import disnake
 from disnake.ext import commands
 import signal
 
+if TYPE_CHECKING:
+    from cogs import UtilsCog
 from modules import asyncreqs
 import constants
 import cogs
 
 
 bot = commands.Bot(
+    command_prefix=">",
     intents=disnake.Intents(
         automod=False,
         automod_configuration=False,
@@ -37,6 +44,7 @@ bot = commands.Bot(
     test_guilds=[constants.GUILD_ID],
 )
 cogs.load(bot)
+utils: UtilsCog = cast("UtilsCog", bot.get_cog("UtilsCog"))  # type: ignore
 
 
 @bot.event
@@ -61,6 +69,48 @@ async def close():
     print("Asyncreqs closed")
     await bot.close()
     print("Bot closed")
+
+
+# I would put this in a cog but it needs the scope of main.py to be effective for debugging
+# this method is stolen from https://github.com/TGWaffles/Utils/blob/4c705ee0855e2a735078b216f8f78bb2143dcbc1/src/cogs/misc.py#L303
+# Since you cannot directly execute async code using exec(), we just use exec() to return a
+# callable async function and then run that.
+@bot.command(name="exec")
+async def exec_cmd(inter: commands.Context, *, code: str = ""):
+    if not await bot.is_owner(inter.author):
+        return await inter.send(
+            embed=UtilsCog.make_error(
+                title="Unauthorized",
+                description="You do not have permission to use this command.",
+            )
+        )
+    try:
+        tmp_dic = {}
+        raw = (
+            (code or inter.message.content.partition(" ")[2])
+            .replace("”", '"')
+            .replace("’", "'")
+            .replace("‘", "'")
+        )
+        if raw.startswith("```"):
+            raw = raw.partition("\n")[2].rsplit("```", 1)[0]
+        body = raw.strip("`\n ")
+        executing_string = f"async def temp_func():\n{textwrap.indent(body, '    ')}\n"
+        print("executing_string", executing_string)
+        exec(executing_string, {**globals(), **locals()}, tmp_dic)
+        await tmp_dic["temp_func"]()
+        await inter.message.add_reaction("✅")
+    except:  # noqa: E722
+        error = traceback.format_exc()
+        print("exec error:", error)
+        await asyncio.gather(
+            inter.message.add_reaction("❌"),
+            inter.send(
+                embed=UtilsCog.make_error(
+                    title="Code Execution Error", description=f"```py\n{error}```"
+                )
+            ),
+        )
 
 
 if __name__ == "__main__":
