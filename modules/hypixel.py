@@ -1,7 +1,7 @@
 from typing import Any
 import datetime
 
-from modules import asyncreqs, minecraft
+from modules import asyncreqs, mojang
 import constants
 
 
@@ -60,7 +60,7 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
     url = "https://api.hypixel.net/v2" + endpoint
     ign = params.pop("ign", None)
     if ign and isinstance(ign, str):
-        player = await minecraft.get_player(ign)
+        player = await mojang.get_player(ign)
         params["uuid"] = player.uuid
     params["key"] = constants.HYPIXEL_API_KEY
 

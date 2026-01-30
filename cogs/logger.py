@@ -7,7 +7,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog, LinkingCog
-from modules import minecraft
+from modules import mojang
 import constants
 
 
@@ -69,8 +69,8 @@ class LoggerCog(commands.Cog):
                 )
             )
 
-        if isinstance(error, minecraft.PlayerNotFound):
-            error = cast("minecraft.PlayerNotFound", error)
+        if isinstance(error, mojang.PlayerNotFound):
+            error = cast("mojang.PlayerNotFound", error)
             return await inter.send(
                 embed=self.UtilsCog.player_not_found_error(error.identifier)
             )
