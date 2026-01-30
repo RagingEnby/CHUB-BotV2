@@ -2,11 +2,10 @@ from disnake.ext import commands
 import disnake
 from typing import TYPE_CHECKING, cast
 
-from modules import autocomplete
-import constants
-
 if TYPE_CHECKING:
     from cogs import LinkingCog
+from modules import autocomplete
+import constants
 
 
 class AdminCog(commands.Cog):
