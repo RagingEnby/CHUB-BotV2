@@ -90,6 +90,15 @@ class LoggerCog(commands.Cog):
                 )
             )
 
+        if isinstance(error, self.LinkingCog.AlreadyVerifiedError):
+            error = cast("LinkingCog.AlreadyVerifiedError", error)
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Already Verified",
+                    description=f"You are already verified to [{error.verified_to}]({constants.NAMEMC_URL.format(error.verified_to)}), you cannot verify to two accounts at once. Please use `/unverify` and try again.",
+                )
+            )
+
         # Unknown errors
         await asyncio.gather(
             inter.send(
