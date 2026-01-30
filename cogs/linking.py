@@ -5,7 +5,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog
-from modules import hypixel
+from modules import hypixel, autocomplete
 
 
 class LinkingCog(commands.Cog):
@@ -52,7 +52,18 @@ class LinkingCog(commands.Cog):
         name="verify",
         description="Verify your Discord account with your Minecraft account",
     )
-    async def verify_command(self, inter: disnake.AppCmdInter, ign: str):
+    async def verify_command(
+        self,
+        inter: disnake.AppCmdInter,
+        ign: str = commands.Param(
+            name="ign",
+            description="The IGN (in game name) of your Minecraft account",
+            default=None,
+            autocomplete=autocomplete.ign,
+            min_length=1,
+            max_length=16,
+        ),
+    ):
         await inter.response.defer()
         await self.verify(inter=inter, identifier=ign)
 
