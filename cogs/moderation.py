@@ -125,18 +125,16 @@ class ModerationCog(commands.Cog):
             description="The reason for the unban. Please write a concise, well though out reason"
         ),
     ):
+        await inter.response.defer()
         try:
-            await asyncio.gather(
-                inter.response.defer(),
-                self.UtilsCog.chub.unban(
-                    user, reason=f"[@{inter.author.name} - {inter.author.id}] {reason}"
-                ),
+            await self.UtilsCog.chub.unban(
+                user, reason=f"[@{inter.author.name} - {inter.author.id}] {reason}"
             )
         except disnake.NotFound as e:
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Ban Not Found",
-                    description=f"Either:\n1. The user is not banned\n2. The ban is not real\n`{e}`",
+                    description=f"Unable to find the user's ban (`{e}`)",
                 )
             )
         await self.on_unban(
@@ -221,6 +219,7 @@ class ModerationCog(commands.Cog):
         user: int | None = None,
         reason: str | None = None,
     ):
+        print(f"on_unban(target={target}, user={user}, reason={reason})")
         ban, unban = await asyncio.gather(
             self.search_ban(discord_id=target),
             self.find_audit_entry(target, BanUpdateType.UNBAN),
