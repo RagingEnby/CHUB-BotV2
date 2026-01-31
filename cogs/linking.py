@@ -298,8 +298,8 @@ class LinkingCog(commands.Cog):
                 except Exception as e:
                     print(f"Error updating member {member.name} ({member.id}): {e}")
                     continue
-                await asyncio.sleep(10)
-            await asyncio.sleep(60)
+                await asyncio.sleep(20)
+            await asyncio.sleep(60 * 4)
 
     @commands.Cog.listener()
     async def on_ready(self):
