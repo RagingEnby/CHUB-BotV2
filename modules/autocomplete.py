@@ -1,4 +1,5 @@
 import disnake
+import asyncio
 
 from modules import ragingenbyapi
 import constants
@@ -17,7 +18,12 @@ async def ign(
         return [
             disnake.OptionChoice(name=ign, value=ign) for ign in constants.ADMIN_IGNS
         ]
-    players = await ragingenbyapi.search_ign_stem(user_input)
+    try:
+        players = await asyncio.wait_for(
+            ragingenbyapi.search_ign_stem(user_input), timeout=5
+        )
+    except asyncio.TimeoutError:
+        return [disnake.OptionChoice(name=user_input, value=user_input)]
     return (
         [
             disnake.OptionChoice(name=player.name, value=player.uuid)
