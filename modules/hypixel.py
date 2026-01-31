@@ -84,14 +84,14 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
         raise PlayerRateLimitError(
             cause=error,
             status_code=response.status_code,
-            retry_after=response.headers.get("Retry-After"),
+            retry_after=int(response.headers.get("Retry-After", "0")),
             player=params.get("uuid"),
         )
     if response.status_code == 429:
         raise RateLimitError(
             cause=data["cause"],
             status_code=response.status_code,
-            retry_after=response.headers.get("Retry-After"),
+            retry_after=int(response.headers.get("Retry-After", "0")),
         )
     if error:
         raise APIError(cause=data["cause"], status_code=response.status_code)
