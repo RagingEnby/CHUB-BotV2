@@ -8,8 +8,9 @@ MONGODB_URI: str = scrts.MONGODB_URI
 
 # Discord IDs
 ## Users
+DEVELOPER_ID: int = 447861538095759365  # RagingEnby
 OWNER_USER_IDS: set[int] = {
-    447861538095759365,  # RagingEnby
+    DEVELOPER_ID,  # RagingEnby
     697136515461152768,  # Vinush
     230778630597246983,  # Thomas
     758304690617712651,  # Foe
