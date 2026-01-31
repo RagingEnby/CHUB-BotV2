@@ -11,7 +11,7 @@ from modules import mojang
 import constants
 
 
-def format_error(e: commands.CommandError) -> str:
+def format_error(e: Exception) -> str:
     return "".join(traceback.format_exception(type(e), e, e.__traceback__))
 
 
@@ -29,29 +29,83 @@ class LoggerCog(commands.Cog):
     def LinkingCog(self) -> "LinkingCog":
         return cast("LinkingCog", self.bot.get_cog("LinkingCog"))
 
-    async def log_command_error(
-        self, inter: disnake.AppCmdInter, e: commands.CommandError
-    ):
-        error = format_error(e)
-        print("[BotStatusCog]", error)
-        embed = self.UtilsCog.inter_to_embed(inter)
-        embed.description = f"```py\n{error[:2000]}\n```"
-        embed.title = "❌ Error: " + (embed.title or "")
-        embed.color = disnake.Color.red()
+    @staticmethod
+    def _truncate_block(text: str, limit: int = 1800) -> str:
+        return text if len(text) <= limit else text[: limit - 3] + "..."
+
+    def _interaction_title(self, inter: disnake.ApplicationCommandInteraction) -> str:
+        try:
+            name = inter.data.name  # type: ignore[attr-defined]
+        except AttributeError:
+            name = None
+        return name or "application command"
+
+    def _interaction_to_embed(
+        self, inter: disnake.ApplicationCommandInteraction
+    ) -> disnake.Embed:
+        if isinstance(inter, disnake.AppCmdInter):
+            return self.UtilsCog.inter_to_embed(inter)
+        embed = disnake.Embed(
+            title=self._interaction_title(inter),
+            color=disnake.Color.blurple(),
+        )
+        embed = self.UtilsCog.add_author_footer(embed, inter.author)
+        return self.UtilsCog.add_guild_footer(embed, inter.channel)
+
+    async def _send_error_embed(self, embed: disnake.Embed):
         try:
             await self.UtilsCog.send_message(
                 channel_id=constants.COMMAND_ERROR_CHANNEL_ID,
                 embed=embed,
             )
-        except disnake.HTTPException:
+        except disnake.HTTPException as e:
             print(
-                f"[BotStatusCog] Failed to send command error to channel {constants.COMMAND_ERROR_CHANNEL_ID}: {e}"
+                f"[BotStatusCog] Failed to send error to channel {constants.COMMAND_ERROR_CHANNEL_ID}: {e}"
             )
             embed.description = None
             await self.UtilsCog.safe_send_message(
                 channel_id=constants.COMMAND_ERROR_CHANNEL_ID,
                 embed=embed,
             )
+
+    async def log_interaction_error(
+        self, inter: disnake.ApplicationCommandInteraction, e: Exception
+    ):
+        error = format_error(e)
+        print("[BotStatusCog]", error)
+        embed = self._interaction_to_embed(inter)
+        embed.description = f"```py\n{self._truncate_block(error)}\n```"
+        embed.title = "❌ Error: " + (embed.title or "")
+        embed.color = disnake.Color.red()
+        await self._send_error_embed(embed)
+
+    async def log_message_command_error(self, ctx: commands.Context, e: Exception):
+        error = format_error(e)
+        print("[BotStatusCog]", error)
+        embed = self.UtilsCog.message_to_embed(ctx.message)
+        if ctx.command:
+            embed.title = ctx.command.qualified_name
+        embed.description = (
+            f"{embed.description or ''}\n```py\n{self._truncate_block(error)}\n```"
+        )
+        embed.title = "❌ Error: " + (embed.title or "command")
+        embed.color = disnake.Color.red()
+        await self._send_error_embed(embed)
+
+    async def log_event_error(self, event: str, error: str, args, kwargs):
+        print("[BotStatusCog]", error)
+        description = (
+            f"**Event:** `{event}`\n"
+            f"**Args:** `{self._truncate_block(str(args), 400)}`\n"
+            f"**Kwargs:** `{self._truncate_block(str(kwargs), 400)}`\n"
+            f"```py\n{self._truncate_block(error)}\n```"
+        )
+        embed = disnake.Embed(
+            title="❌ Error: event handler",
+            description=description,
+            color=disnake.Color.red(),
+        )
+        await self._send_error_embed(embed)
 
     @commands.Cog.listener()
     async def on_slash_command_error(
@@ -125,12 +179,29 @@ class LoggerCog(commands.Cog):
                     description="This error has been forwarded to the bot developer. Please try again later.",
                 )
             ),
-            self.log_command_error(inter, e),
+            self.log_interaction_error(inter, e),
         )
 
     @commands.Cog.listener()
+    async def on_user_command_error(
+        self, inter: disnake.ApplicationCommandInteraction, e: commands.CommandError
+    ):
+        await self.log_interaction_error(inter, e)
+
+    @commands.Cog.listener()
+    async def on_message_command_error(
+        self, inter: disnake.ApplicationCommandInteraction, e: commands.CommandError
+    ):
+        await self.log_interaction_error(inter, e)
+
+    @commands.Cog.listener()
+    async def on_command_error(self, ctx: commands.Context, e: commands.CommandError):
+        await self.log_message_command_error(ctx, e)
+
+    @commands.Cog.listener()
     async def on_error(self, event: str, *args, **kwargs):
-        print(f"[BotStatusCog] Error in {event}: {args} {kwargs}")
+        error = traceback.format_exc()
+        await self.log_event_error(event, error, args, kwargs)
 
     async def close(self):
         await self.UtilsCog.send_message(
