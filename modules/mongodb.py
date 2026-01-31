@@ -1,7 +1,7 @@
 from typing import Any
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from pymongo import UpdateOne
-from pymongo.results import BulkWriteResult, UpdateResult, DeleteResult
+from pymongo.results import BulkWriteResult, InsertOneResult, DeleteResult, UpdateResult
 
 import constants
 
@@ -35,7 +35,7 @@ class Collection:
         data: dict[str, Any],
         query: dict[str, Any] | None = None,
         upsert: bool = False,
-    ):
+    ) -> UpdateResult:
         if query is None and not data.get("_id"):
             raise ValueError("Query is required when data does not have an _id")
         if query is None:
@@ -45,10 +45,10 @@ class Collection:
 
     async def insert(
         self, *documents: dict[str, Any]
-    ) -> UpdateResult | BulkWriteResult:
-        if len(documents) == 1:
-            return await self.update(documents[0])
+    ) -> InsertOneResult | BulkWriteResult:
         collection = await self.get_collection()
+        if len(documents) > 1:
+            return await collection.insert_one(documents[0])
         operations = [
             UpdateOne({"_id": document["_id"]}, {"$set": document}, upsert=True)
             for document in documents
