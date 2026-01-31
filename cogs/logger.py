@@ -1,4 +1,5 @@
 import asyncio
+import datetime
 import disnake
 from disnake.ext import commands
 import traceback
@@ -93,7 +94,11 @@ class LoggerCog(commands.Cog):
     ):
         with suppress(disnake.InteractionResponded):
             await inter.response.defer(ephemeral=True)
-        error = cast("Exception", e.original)  # type: ignore
+        error = (
+            cast("Exception", e.original)  # type: ignore
+            if hasattr(e, "original")
+            else cast("Exception", e)
+        )
 
         if isinstance(e, commands.CheckFailure):
             return await inter.send(
@@ -103,16 +108,17 @@ class LoggerCog(commands.Cog):
                 )
             )
 
-        cooldown = None
-        if isinstance(e, commands.CommandOnCooldown):
-            cooldown = e
-        elif isinstance(error, commands.CommandOnCooldown):
-            cooldown = error
-        if cooldown is not None:
+        cooldown = (
+            e if isinstance(e, commands.CommandOnCooldown)
+            else error if isinstance(error, commands.CommandOnCooldown)
+            else None
+        )
+        if cooldown:
+            try_at = datetime.datetime.now() + datetime.timedelta(seconds=cooldown.retry_after)
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Cooldown",
-                    description=f"Try again in {cooldown.retry_after:.1f}s.",
+                    description=f"Try again {disnake.utils.format_dt(try_at, 'R')}.",
                 )
             )
 
