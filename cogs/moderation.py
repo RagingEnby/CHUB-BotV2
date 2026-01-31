@@ -5,7 +5,6 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog
-import constants
 
 
 class ModerationCog(commands.Cog):
@@ -18,9 +17,4 @@ class ModerationCog(commands.Cog):
         return cast("UtilsCog", self.bot.get_cog("UtilsCog"))
 
     async def cog_slash_command_check(self, inter: disnake.AppCmdInter) -> bool:
-        if isinstance(inter.author, disnake.User):
-            return await self.bot.is_owner(inter.author)
-        return (
-            await self.bot.is_owner(inter.author)
-            or inter.author.get_role(constants.STAFF_ROLE_ID) is not None
-        )
+        return self.UtilsCog.is_staff(inter.author)
