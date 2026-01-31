@@ -1,7 +1,5 @@
-import json
 from typing import Any
 import datetime
-import aiofiles
 
 from modules import asyncreqs, mojang
 import constants
@@ -57,6 +55,10 @@ class PlayerRateLimitError(RateLimitError):
         )
 
 
+_CACHE_TTL = datetime.timedelta(seconds=60)
+_CACHE: dict[tuple[str, str], tuple[datetime.datetime, dict[str, Any]]] = {}
+
+
 async def get(endpoint: str, **params: Any) -> dict[str, Any]:
     # formulate request
     url = "https://api.hypixel.net/v2" + endpoint
@@ -65,6 +67,12 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
         player = await mojang.get_player(ign)
         params["uuid"] = player.uuid
     params["key"] = constants.HYPIXEL_API_KEY
+    uuid = params.get("uuid")
+    cache_key = (endpoint, uuid) if isinstance(uuid, str) else None
+    if cache_key:
+        cached = _CACHE.get(cache_key)
+        if cached and datetime.datetime.now() - cached[0] <= _CACHE_TTL:
+            return cached[1]
 
     # get data
     response = await asyncreqs.get(url, params=params)
@@ -88,6 +96,8 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
     if error:
         raise APIError(cause=data["cause"], status_code=response.status_code)
 
+    if cache_key:
+        _CACHE[cache_key] = (datetime.datetime.now(), data)
     return data
 
 
