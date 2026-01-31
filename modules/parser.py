@@ -2,14 +2,16 @@ import io
 import json
 from base64 import b64decode
 from contextlib import suppress
-from typing import Any
+from typing import Any, TypeAlias
 
 from nbt import nbt
 
 
-def nbt_to_dict(
-    nbt_data: nbt.NBTFile | nbt.TAG_Compound | nbt.TAG_List | nbt.TAG,
-) -> Any:
+NbtInput: TypeAlias = nbt.NBTFile | nbt.TAG_Compound | nbt.TAG_List | nbt.TAG
+JsonObject: TypeAlias = dict[str, Any]
+
+
+def nbt_to_dict(nbt_data: NbtInput) -> Any:
     if isinstance(nbt_data, (nbt.NBTFile, nbt.TAG_Compound)):
         return {tag.name: nbt_to_dict(tag) for tag in nbt_data.tags}
     elif isinstance(nbt_data, nbt.TAG_List):
@@ -17,39 +19,41 @@ def nbt_to_dict(
     return nbt_data.value
 
 
-def raw_decode(data: bytes) -> list[dict[str, Any]]:
+def raw_decode(data: bytes) -> list[JsonObject]:
     with io.BytesIO(data) as fileobj:
-        parsed_data: dict[str, list[dict[str, Any]]] = nbt_to_dict(
-            nbt.NBTFile(fileobj=fileobj)
-        )  # type: ignore [assignment]
-        if len(parsed_data) == 1 and "i" in parsed_data:
+        parsed_data = nbt_to_dict(nbt.NBTFile(fileobj=fileobj))
+        if (
+            isinstance(parsed_data, dict)
+            and len(parsed_data) == 1
+            and "i" in parsed_data
+            and isinstance(parsed_data["i"], list)
+        ):
             return parsed_data["i"]
-        else:
-            raise ValueError("Invalid item data", data)
+        raise ValueError("Invalid item data", data)
 
 
-def ensure_all_decoded(data: dict[str, Any] | Any) -> dict[str, Any]:
-    for k, v in data.items():
-        if k == "petInfo" and isinstance(v, str):
-            with suppress(json.JSONDecodeError):
-                data[k] = json.loads(v)
-        if isinstance(v, dict):
-            data[k] = ensure_all_decoded(v)
-        elif isinstance(v, list):
-            data[k] = [
-                ensure_all_decoded(item) if isinstance(item, (dict, list)) else item
-                for item in v
-            ]
-        elif isinstance(v, bytearray):
-            data[k] = str(v)
-            # data[k] = raw_decode(v)
-    return data
+def ensure_all_decoded(value: Any) -> Any:
+    if isinstance(value, dict):
+        for k, v in value.items():
+            if k == "petInfo" and isinstance(v, str):
+                with suppress(json.JSONDecodeError):
+                    v = json.loads(v)
+            value[k] = ensure_all_decoded(v)
+        return value
+    if isinstance(value, list):
+        for idx, item in enumerate(value):
+            if isinstance(item, (dict, list)):
+                value[idx] = ensure_all_decoded(item)
+        return value
+    if isinstance(value, bytearray):
+        return str(value)
+    return value
 
 
-def decode(item_bytes: str) -> list[dict[str, Any]]:
-    decoded = [ensure_all_decoded(i) for i in raw_decode(b64decode(item_bytes))]
+def decode(item_bytes: str) -> list[JsonObject]:
+    decoded = (ensure_all_decoded(i) for i in raw_decode(b64decode(item_bytes)))
     return [i for i in decoded if i]
 
 
-def decode_single(item_bytes: str) -> dict[str, Any]:
+def decode_single(item_bytes: str) -> JsonObject:
     return decode(item_bytes)[0]
