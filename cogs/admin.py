@@ -61,13 +61,7 @@ class AdminCog(commands.Cog):
             description="The member to update",
         ),
     ):
-        await self.LinkingCog.update_member(member=member)
-        return await inter.send(
-            embed=self.UtilsCog.make_success(
-                title="Updated",
-                description="The member's synced roles and display name have been updated.",
-            )
-        )
+        await self.LinkingCog.do_update_command(inter=inter, member=member)
 
     @admin.sub_command_group(
         name="force", description="Force admin verification actions"

@@ -178,7 +178,7 @@ class LinkingCog(commands.Cog):
                 return
                 # print(f"Lacking permissions to update member: {member.id}")
 
-    async def hypixel_verify(
+    async def do_verify_command(
         self,
         inter: disnake.AppCmdInter,
         identifier: str,
@@ -250,7 +250,23 @@ class LinkingCog(commands.Cog):
             max_length=32,
         ),
     ):
-        await self.hypixel_verify(inter=inter, identifier=ign)
+        await self.do_verify_command(inter=inter, identifier=ign)
+
+    async def do_unverify_command(
+        self, inter: disnake.AppCmdInter, member: disnake.Member | None = None
+    ):
+        member = member or cast("disnake.Member", inter.author)
+        _, results = await asyncio.gather(
+            inter.response.defer(), self.delete_verification(discord_id=member.id)
+        )
+        if not results.deleted_count:
+            raise self.UnverifiedError(member.id)
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Unverified",
+                description="Your Discord account has been unverified from your Minecraft account.",
+            )
+        )
 
     @commands.slash_command(
         name="unverify",
@@ -261,15 +277,20 @@ class LinkingCog(commands.Cog):
         self,
         inter: disnake.AppCmdInter,
     ):
-        results, _ = await asyncio.gather(
-            self.delete_verification(discord_id=inter.author.id), inter.response.defer()
+        await self.do_unverify_command(inter=inter)
+
+    async def do_update_command(
+        self, inter: disnake.AppCmdInter, member: disnake.Member | None = None
+    ):
+        member = member or cast("disnake.Member", inter.author)
+        await asyncio.gather(
+            inter.response.defer(),
+            self.update_member(member=member),
         )
-        if not results.deleted_count:
-            raise self.UnverifiedError(inter.author.id)
         return await inter.send(
             embed=self.UtilsCog.make_success(
-                title="Unverified",
-                description="Your Discord account has been unverified from your Minecraft account.",
+                title="Updated",
+                description="Your synced roles and display name have been updated.",
             )
         )
 
@@ -281,14 +302,7 @@ class LinkingCog(commands.Cog):
         self,
         inter: disnake.AppCmdInter,
     ):
-        await inter.response.defer()
-        await self.update_member(member=cast("disnake.Member", inter.author))
-        return await inter.send(
-            embed=self.UtilsCog.make_success(
-                title="Updated",
-                description="Your synced roles and display name have been updated.",
-            )
-        )
+        await self.do_update_command(inter=inter)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: disnake.Member):
