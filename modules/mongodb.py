@@ -41,7 +41,7 @@ class Collection:
         if query is None:
             query = {"_id": data["_id"]}
         collection = await self.get_collection()
-        return await collection.update(query, {"$set": data}, upsert=upsert)
+        return await collection.update_one(query, {"$set": data}, upsert=upsert)
 
     async def insert(
         self, *documents: dict[str, Any]
