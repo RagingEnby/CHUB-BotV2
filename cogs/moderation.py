@@ -138,6 +138,9 @@ class ModerationCog(commands.Cog):
         date: datetime.datetime,
         reason: str | None = None,
     ):
+        if await self.ban_db.get({"_id": ban_id}, projection={"_id": 1}):
+            print(f"Ignoring duplicate ban entry: {ban_id}")
+            return
         linked_doc = await self.LinkingCog.search_verification(discord_id=target)
         await self.ban_db.insert(
             {
