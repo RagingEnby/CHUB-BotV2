@@ -8,7 +8,7 @@ from typing import TYPE_CHECKING, cast
 
 if TYPE_CHECKING:
     from cogs import UtilsCog, LinkingCog
-from modules import mojang
+from modules import mojang, hypixel
 import constants
 
 
@@ -100,7 +100,8 @@ class LoggerCog(commands.Cog):
             else cast("Exception", e)
         )
 
-        if isinstance(e, commands.CheckFailure):
+        if isinstance(error, commands.CheckFailure):
+            error = cast("commands.CheckFailure", error)
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Unauthorized",
@@ -108,13 +109,11 @@ class LoggerCog(commands.Cog):
                 )
             )
 
-        cooldown = (
-            e if isinstance(e, commands.CommandOnCooldown)
-            else error if isinstance(error, commands.CommandOnCooldown)
-            else None
-        )
-        if cooldown:
-            try_at = datetime.datetime.now() + datetime.timedelta(seconds=cooldown.retry_after)
+        if isinstance(error, commands.CommandOnCooldown):
+            error = cast("commands.CommandOnCooldown", error)
+            try_at = datetime.datetime.now() + datetime.timedelta(
+                seconds=error.retry_after
+            )
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Cooldown",
@@ -167,6 +166,15 @@ class LoggerCog(commands.Cog):
                 embed=self.UtilsCog.make_error(
                     title="Not Verified",
                     description="This command is only accessible to verified users. Please use `/verify` and try again.",
+                )
+            )
+
+        if isinstance(error, hypixel.RateLimitError):
+            error = cast("hypixel.RateLimitError", error)
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Hypixel Rate Limit",
+                    description=f"Hypixel is currently rate limiting our API key, please try again {disnake.utils.format_dt(datetime.datetime.now() + error.retry, 'R')}.",
                 )
             )
 
