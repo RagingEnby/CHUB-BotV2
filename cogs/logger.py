@@ -33,34 +33,16 @@ class LoggerCog(commands.Cog):
     def _truncate_block(text: str, limit: int = 1800) -> str:
         return text if len(text) <= limit else text[: limit - 3] + "..."
 
-    def _interaction_title(self, inter: disnake.ApplicationCommandInteraction) -> str:
-        try:
-            name = inter.data.name  # type: ignore[attr-defined]
-        except AttributeError:
-            name = None
-        return name or "application command"
-
-    def _interaction_to_embed(
-        self, inter: disnake.ApplicationCommandInteraction
-    ) -> disnake.Embed:
-        if isinstance(inter, disnake.AppCmdInter):
-            return self.UtilsCog.inter_to_embed(inter)
-        embed = disnake.Embed(
-            title=self._interaction_title(inter),
-            color=disnake.Color.blurple(),
-        )
-        embed = self.UtilsCog.add_author_footer(embed, inter.author)
-        return self.UtilsCog.add_guild_footer(embed, inter.channel)
-
     async def _send_error_embed(self, embed: disnake.Embed):
         try:
             await self.UtilsCog.send_message(
+                content=f"<@{constants.DEVELOPER_ID}>",
                 channel_id=constants.COMMAND_ERROR_CHANNEL_ID,
                 embed=embed,
             )
         except disnake.HTTPException as e:
             print(
-                f"[BotStatusCog] Failed to send error to channel {constants.COMMAND_ERROR_CHANNEL_ID}: {e}"
+                f"[LoggerCog] Failed to send error to channel {constants.COMMAND_ERROR_CHANNEL_ID}: {e}"
             )
             embed.description = None
             await self.UtilsCog.safe_send_message(
@@ -68,12 +50,10 @@ class LoggerCog(commands.Cog):
                 embed=embed,
             )
 
-    async def log_interaction_error(
-        self, inter: disnake.ApplicationCommandInteraction, e: Exception
-    ):
+    async def log_interaction_error(self, inter: disnake.AppCmdInter, e: Exception):
         error = format_error(e)
-        print("[BotStatusCog]", error)
-        embed = self._interaction_to_embed(inter)
+        print("[LoggerCog]", error)
+        embed = self.UtilsCog.inter_to_embed(inter)
         embed.description = f"```py\n{self._truncate_block(error)}\n```"
         embed.title = "❌ Error: " + (embed.title or "")
         embed.color = disnake.Color.red()
@@ -81,7 +61,7 @@ class LoggerCog(commands.Cog):
 
     async def log_message_command_error(self, ctx: commands.Context, e: Exception):
         error = format_error(e)
-        print("[BotStatusCog]", error)
+        print("[LoggerCog]", error)
         embed = self.UtilsCog.message_to_embed(ctx.message)
         if ctx.command:
             embed.title = ctx.command.qualified_name
@@ -93,7 +73,7 @@ class LoggerCog(commands.Cog):
         await self._send_error_embed(embed)
 
     async def log_event_error(self, event: str, error: str, args, kwargs):
-        print("[BotStatusCog]", error)
+        print("[LoggerCog]", error)
         description = (
             f"**Event:** `{event}`\n"
             f"**Args:** `{self._truncate_block(str(args), 400)}`\n"
@@ -184,13 +164,13 @@ class LoggerCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_user_command_error(
-        self, inter: disnake.ApplicationCommandInteraction, e: commands.CommandError
+        self, inter: disnake.AppCmdInter, e: commands.CommandError
     ):
         await self.log_interaction_error(inter, e)
 
     @commands.Cog.listener()
     async def on_message_command_error(
-        self, inter: disnake.ApplicationCommandInteraction, e: commands.CommandError
+        self, inter: disnake.AppCmdInter, e: commands.CommandError
     ):
         await self.log_interaction_error(inter, e)
 
@@ -215,7 +195,7 @@ class LoggerCog(commands.Cog):
     @commands.Cog.listener()
     async def on_slash_command(self, inter: disnake.AppCmdInter):
         print(
-            f"[BotStatusCog] {inter.author} used {self.UtilsCog.prettify_command(inter)}"
+            f"[LoggerCog] {inter.author} used {self.UtilsCog.prettify_command(inter)}"
         )
 
     @commands.Cog.listener()
