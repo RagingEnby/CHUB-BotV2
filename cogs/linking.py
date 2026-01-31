@@ -20,6 +20,7 @@ class LinkedUserDoc(TypedDict):
     uuid: str
     date: datetime.datetime
     source: LinkSource
+    manualReason: str | None
 
 
 class LinkingCog(commands.Cog):
