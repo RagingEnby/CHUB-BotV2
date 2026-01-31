@@ -79,7 +79,7 @@ class AdminCog(commands.Cog):
         name="verify",
         description="Forcefully verify a Minecraft account to a user. **USE VERY RARELY**",
     )
-    async def bypass_verification_command(
+    async def force_verify_command(
         self,
         inter: disnake.AppCmdInter,
         member: disnake.Member = commands.Param(
