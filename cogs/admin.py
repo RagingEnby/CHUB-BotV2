@@ -105,6 +105,7 @@ class AdminCog(commands.Cog):
             source="manual",
             manual_reason=f"[{inter.author.id}] {reason}",
         )
+        await self.LinkingCog.update_member(member=member)
         await inter.send(
             embed=self.UtilsCog.make_success(
                 title="Verified",
