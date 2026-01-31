@@ -34,7 +34,7 @@ class AdminCog(commands.Cog):
         name="verify",
         description="Verify a Minecraft account with a Discord account",
     )
-    async def verify(
+    async def verify_command(
         self,
         inter: disnake.AppCmdInter,
         ign: str = commands.Param(
@@ -53,7 +53,7 @@ class AdminCog(commands.Cog):
         name="update",
         description="Update a member's synced roles and display name",
     )
-    async def update(
+    async def update_command(
         self,
         inter: disnake.AppCmdInter,
         member: disnake.Member = commands.Param(
@@ -79,7 +79,7 @@ class AdminCog(commands.Cog):
         name="verify",
         description="Forcefully verify a Minecraft account to a user. **USE VERY RARELY**",
     )
-    async def bypass_verification(
+    async def bypass_verification_command(
         self,
         inter: disnake.AppCmdInter,
         member: disnake.Member = commands.Param(
