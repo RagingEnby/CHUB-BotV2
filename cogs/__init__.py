@@ -2,7 +2,7 @@ from disnake.ext import commands
 
 from .linking import LinkingCog
 from .logger import LoggerCog
-from .utilscog import UtilsCog
+from .utils import UtilsCog
 from .admin import AdminCog
 from .moderation import ModerationCog
 
