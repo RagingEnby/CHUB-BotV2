@@ -4,6 +4,7 @@ from .linking import LinkingCog
 from .logger import LoggerCog
 from .utilscog import UtilsCog
 from .admin import AdminCog
+from .moderation import ModerationCog
 
 
 def load(bot: commands.Bot):
@@ -17,4 +18,5 @@ __all__ = [
     "LoggerCog",
     "UtilsCog",
     "AdminCog",
+    "ModerationCog",
 ]
