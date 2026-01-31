@@ -47,7 +47,7 @@ class AdminCog(commands.Cog):
             description="The member to verify the Minecraft account to",
         ),
     ):
-        await self.LinkingCog.hypixel_verify(inter, ign, member)
+        await self.LinkingCog.do_verify_command(inter, ign, member)
 
     @admin.sub_command(
         name="update",
