@@ -67,12 +67,16 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
         player = await mojang.get_player(ign)
         params["uuid"] = player.uuid
     params["key"] = constants.HYPIXEL_API_KEY
-    uuid = params.get("uuid")
-    cache_key = (endpoint, uuid) if isinstance(uuid, str) else None
+    uuid: str | None = params.get("uuid")
+    cache_key: tuple[str, str] | None = (
+        (endpoint, uuid) if isinstance(uuid, str) else None
+    )
+    cached_data: dict[str, Any] | None = None
     if cache_key:
-        cached = _CACHE.get(cache_key)
+        cached: tuple[datetime.datetime, dict[str, Any]] | None = _CACHE.get(cache_key)
         if cached and datetime.datetime.now() - cached[0] <= _CACHE_TTL:
-            return cached[1]
+            cached_data = cached[1]
+            return cached_data
 
     # get data
     response = await asyncreqs.get(url, params=params)
@@ -81,6 +85,8 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
     # handle errors
     error = data.get("cause")
     if data.get("cause") == PlayerRateLimitError.cause_message:
+        if cached_data:
+            return cached_data
         raise PlayerRateLimitError(
             cause=error,
             status_code=response.status_code,
@@ -88,6 +94,8 @@ async def get(endpoint: str, **params: Any) -> dict[str, Any]:
             player=params.get("uuid"),
         )
     if response.status_code == 429:
+        if cached_data:
+            return cached_data
         raise RateLimitError(
             cause=data["cause"],
             status_code=response.status_code,
