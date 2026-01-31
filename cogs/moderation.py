@@ -86,19 +86,9 @@ class ModerationCog(commands.Cog):
                 clean_history_duration=delete_messages,
             ),
         )
-        ban_entry = await self.find_audit_entry(member.id, BanUpdateType.BAN)
-        if ban_entry is None:
-            return await inter.send(
-                embed=self.UtilsCog.make_error(
-                    title="Unable To Find Ban Entry",
-                    description="The user was successfully banned, but I was unable to find the ban entry in order to log it to the ban database. This is a major error, **PLEASE CONTACT RAGINGENBY**",
-                )
-            )
         await self.on_ban(
-            ban_id=ban_entry.id,
             target=member.id,
             user=inter.author.id,
-            date=ban_entry.created_at,
             reason=reason,
         )
         await inter.send(
@@ -163,28 +153,39 @@ class ModerationCog(commands.Cog):
 
     async def on_ban(
         self,
-        ban_id: int,
         target: int,
-        user: int | None,
-        date: datetime.datetime,
+        user: int | None = None,
         reason: str | None = None,
     ):
-        if await self.ban_db.get({"_id": ban_id}, projection={"_id": 1}):
-            print(f"Ignoring duplicate ban entry: {ban_id}")
+        audit_entry = await self.find_audit_entry(target, BanUpdateType.BAN)
+        if not audit_entry:
+            raise Exception(f"Could not find ban audit log entry for {target}")
+
+        if (
+            not user
+            and audit_entry
+            and audit_entry.user
+            and audit_entry.user.id == self.bot.user.id
+        ):
             return
+
+        if await self.ban_db.get({"_id": audit_entry.id}, projection={"_id": 1}):
+            print(f"Ignoring duplicate ban entry: {audit_entry.id}")
+            return
+
         linked_doc = await self.LinkingCog.search_verification(discord_id=target)
         await self.ban_db.insert(
             {
-                "_id": ban_id,
+                "_id": audit_entry.id,
                 "discordId": target,
                 "uuid": linked_doc["uuid"] if linked_doc else None,
-                "date": date,
-                "bannedBy": user,
-                "reason": reason,
+                "date": audit_entry.created_at or datetime.datetime.now(),
+                "bannedBy": user or audit_entry.user.id if audit_entry.user else None,
+                "reason": reason or audit_entry.reason if audit_entry else None,
                 "unban": None,
             }
         )
-        if not reason:
+        if reason is None or not reason.strip():
             await self.UtilsCog.send_message(
                 channel_id=constants.STAFF_CHANNEL_ID,
                 content=f"<@{user}> You banned user <@{target}> without a ban reason. PLEASE remember to always provide a ban reason.",
@@ -224,19 +225,7 @@ class ModerationCog(commands.Cog):
     async def on_raw_member_remove(self, payload: disnake.RawGuildMemberRemoveEvent):
         if payload.guild_id != constants.GUILD_ID:
             return
-        ban_entry = await self.find_audit_entry(payload.user.id, BanUpdateType.BAN)
-        if ban_entry is None:
-            return
-        banner = ban_entry.user.id if ban_entry.user else None
-        if banner == self.bot.user.id:
-            return
-        await self.on_ban(
-            ban_id=ban_entry.id,
-            target=payload.user.id,
-            user=banner,
-            date=ban_entry.created_at,
-            reason=ban_entry.reason,
-        )
+        await self.on_ban(payload.user.id)
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: disnake.Guild, user: disnake.User):
