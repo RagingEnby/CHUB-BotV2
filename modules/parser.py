@@ -4,11 +4,10 @@ from base64 import b64decode
 from contextlib import suppress
 from typing import Any, TypeAlias
 
-from nbt import nbt
+from nbt import nbt  # type: ignore[import-untyped]
 
 
 NbtInput: TypeAlias = nbt.NBTFile | nbt.TAG_Compound | nbt.TAG_List | nbt.TAG
-JsonObject: TypeAlias = dict[str, Any]
 
 
 def nbt_to_dict(nbt_data: NbtInput) -> Any:
@@ -19,7 +18,7 @@ def nbt_to_dict(nbt_data: NbtInput) -> Any:
     return nbt_data.value
 
 
-def raw_decode(data: bytes) -> list[JsonObject]:
+def raw_decode(data: bytes) -> dict[str, Any]:
     with io.BytesIO(data) as fileobj:
         parsed_data = nbt_to_dict(nbt.NBTFile(fileobj=fileobj))
         if (
@@ -50,10 +49,10 @@ def ensure_all_decoded(value: Any) -> Any:
     return value
 
 
-def decode(item_bytes: str) -> list[JsonObject]:
+def decode(item_bytes: str) -> list[dict[str, Any]]:
     decoded = (ensure_all_decoded(i) for i in raw_decode(b64decode(item_bytes)))
     return [i for i in decoded if i]
 
 
-def decode_single(item_bytes: str) -> JsonObject:
+def decode_single(item_bytes: str) -> dict[str, Any]:
     return decode(item_bytes)[0]
