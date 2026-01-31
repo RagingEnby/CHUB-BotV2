@@ -125,3 +125,14 @@ class UtilsCog(commands.Cog):
         return "\n".join(
             [f"**{k}:** `{str(v).replace('`', '')}`" for k, v in content.items()]
         )
+
+    def is_staff(self, member: disnake.Member | disnake.User | int) -> bool:
+        if isinstance(member, disnake.Member) and member.guild.id == constants.GUILD_ID:
+            return member.get_role(constants.STAFF_ROLE_ID) is not None
+        chub_member = self.chub.get_member(
+            member if isinstance(member, int) else member.id
+        )
+        return (
+            chub_member is not None
+            and chub_member.get_role(constants.STAFF_ROLE_ID) is not None
+        )
