@@ -30,7 +30,7 @@ class Collection:
             self._client = None
             self._collection = None
 
-    async def update_one(
+    async def update(
         self,
         data: dict[str, Any],
         query: dict[str, Any] | None = None,
@@ -41,13 +41,13 @@ class Collection:
         if query is None:
             query = {"_id": data["_id"]}
         collection = await self.get_collection()
-        return await collection.update_one(query, {"$set": data}, upsert=upsert)
+        return await collection.update(query, {"$set": data}, upsert=upsert)
 
     async def insert(
         self, *documents: dict[str, Any]
     ) -> UpdateResult | BulkWriteResult:
         if len(documents) == 1:
-            return await self.update_one(documents[0])
+            return await self.update(documents[0])
         collection = await self.get_collection()
         operations = [
             UpdateOne({"_id": document["_id"]}, {"$set": document}, upsert=True)

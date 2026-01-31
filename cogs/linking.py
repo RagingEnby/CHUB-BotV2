@@ -86,7 +86,7 @@ class LinkingCog(commands.Cog):
             raise ValueError("manual_reason can only be provided if source is 'manual'")
         if manual_reason is None and source == "manual":
             raise ValueError("manual_reason must be provided if source is 'manual'")
-        await self.linked_users_db.update_one(
+        await self.linked_users_db.update(
             {
                 "_id": discord_id,
                 "uuid": uuid,
