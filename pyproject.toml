@@ -9,5 +9,9 @@ dependencies = [
     "curl-cffi>=0.13.0",
     "disnake>=2.11.0",
     "motor>=3.7.1",
+    "nbt",
     "pymongo>=4.15.3",
 ]
+
+[tool.uv.sources]
+nbt = { git = "https://github.com/RagingEnby/NBT.git" }

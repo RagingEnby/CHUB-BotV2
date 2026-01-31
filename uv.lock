@@ -143,6 +143,7 @@ dependencies = [
     { name = "curl-cffi" },
     { name = "disnake" },
     { name = "motor" },
+    { name = "nbt" },
     { name = "pymongo" },
 ]
 
@@ -152,6 +153,7 @@ requires-dist = [
     { name = "curl-cffi", specifier = ">=0.13.0" },
     { name = "disnake", specifier = ">=2.11.0" },
     { name = "motor", specifier = ">=3.7.1" },
+    { name = "nbt", git = "https://github.com/RagingEnby/NBT.git" },
     { name = "pymongo", specifier = ">=4.15.3" },
 ]
 
@@ -303,6 +305,20 @@ wheels = [
     { url = "https://files.pythonhosted.org/packages/ba/8f/0a60e501584145588be1af5cc829265701ba3c35a64aec8e07cbb71d39bb/multidict-6.7.0-cp314-cp314t-win_amd64.whl", hash = "sha256:09929cab6fcb68122776d575e03c6cc64ee0b8fca48d17e135474b042ce515cd", size = 53507, upload-time = "2025-10-06T14:51:53.672Z" },
     { url = "https://files.pythonhosted.org/packages/7f/ae/3148b988a9c6239903e786eac19c889fab607c31d6efa7fb2147e5680f23/multidict-6.7.0-cp314-cp314t-win_arm64.whl", hash = "sha256:cc41db090ed742f32bd2d2c721861725e6109681eddf835d0a82bd3a5c382827", size = 44804, upload-time = "2025-10-06T14:51:55.415Z" },
     { url = "https://files.pythonhosted.org/packages/b7/da/7d22601b625e241d4f23ef1ebff8acfc60da633c9e7e7922e24d10f592b3/multidict-6.7.0-py3-none-any.whl", hash = "sha256:394fc5c42a333c9ffc3e421a4c85e08580d990e08b99f6bf35b4132114c5dcb3", size = 12317, upload-time = "2025-10-06T14:52:29.272Z" },
+]
+
+[[package]]
+name = "mutf8"
+version = "1.0.6"
+source = { registry = "https://pypi.org/simple" }
+sdist = { url = "https://files.pythonhosted.org/packages/ca/31/3c57313757b3a47dcf32d2a9bad55d913b797efc8814db31bed8a7142396/mutf8-1.0.6.tar.gz", hash = "sha256:1bbbefb67c2e5a57104750bb04b0912200b57b2fa9841be245279e83859cb346", size = 6424, upload-time = "2021-12-29T03:02:17.271Z" }
+
+[[package]]
+name = "nbt"
+version = "1.5.1"
+source = { git = "https://github.com/RagingEnby/NBT.git#7c672e11c4daaef3c1ee070c2e401e4b7b9efff8" }
+dependencies = [
+    { name = "mutf8" },
 ]
 
 [[package]]
