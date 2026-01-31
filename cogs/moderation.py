@@ -12,8 +12,9 @@ import constants
 
 
 class UnbanDoc(TypedDict):
-    unbannedBy: int
-    reason: str
+    id: int | None
+    unbannedBy: int | None
+    reason: str | None
     date: datetime.datetime
 
 
@@ -102,7 +103,37 @@ class ModerationCog(commands.Cog):
         )
         await inter.send(
             embed=self.UtilsCog.make_success(
-                title="Banned", description="The user has been banned from the server"
+                title="Banned",
+                description="The user has been banned from Collector's Hub",
+            )
+        )
+
+    @moderation.sub_command(name="unban", description="Unban a member")
+    async def unban_command(
+        self,
+        inter: disnake.AppCmdInter,
+        user: disnake.User = commands.Param(
+            description="The user to unban (usually you'll need to paste a user ID)"
+        ),
+        reason: str = commands.Param(
+            description="The reason for the unban. Please write a concise, well though out reason"
+        ),
+    ):
+        await asyncio.gather(
+            inter.response.defer(),
+            self.UtilsCog.chub.unban(
+                user, reason=f"[@{inter.author.name} - {inter.author.id}] {reason}"
+            ),
+        )
+        await self.on_unban(
+            target=user.id,
+            user=inter.author.id,
+            reason=reason,
+        )
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Unbanned",
+                description="The user has been unbanned from Collector's Hub",
             )
         )
 
@@ -159,8 +190,36 @@ class ModerationCog(commands.Cog):
                 content=f"<@{user}> You banned user <@{target}> without a ban reason. PLEASE remember to always provide a ban reason.",
             )
 
+    async def on_unban(
+        self,
+        target: int,
+        user: int | None = None,
+        reason: str | None = None,
+    ):
+        ban, unban = await asyncio.gather(
+            self.search_ban(discord_id=target),
+            self.find_audit_entry(target, BanUpdateType.UNBAN),
+        )
+        if ban is None:
+            raise Exception(f"Could not find ban entry for {target}")
+        await self.ban_db.update(
+            {
+                "unban": {
+                    "id": unban.id if unban else None,
+                    "unbannedBy": (
+                        user or unban.user.id if unban and unban.user else None
+                    ),
+                    "reason": reason or unban.reason if unban else None,
+                    "date": unban.created_at if unban else datetime.datetime.now(),
+                }
+            },
+            query={"_id": ban["_id"]},
+        )
+
     @commands.Cog.listener()
     async def on_raw_member_remove(self, payload: disnake.RawGuildMemberRemoveEvent):
+        if payload.guild_id != constants.GUILD_ID:
+            return
         ban_entry = await self.find_audit_entry(payload.user.id, BanUpdateType.BAN)
         if ban_entry is None:
             return
@@ -177,7 +236,9 @@ class ModerationCog(commands.Cog):
 
     @commands.Cog.listener()
     async def on_member_unban(self, guild: disnake.Guild, user: disnake.User):
-        return
+        if guild.id != constants.GUILD_ID:
+            return
+        await self.on_unban(user.id)
 
     async def close(self):
         self.ban_db.close()
