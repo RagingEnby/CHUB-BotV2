@@ -243,7 +243,6 @@ class LinkingCog(commands.Cog):
         self,
         inter: disnake.AppCmdInter,
         ign: str = commands.Param(
-            name="ign",
             description="Your Minecraft username or UUID",
             autocomplete=autocomplete.ign,
             min_length=1,

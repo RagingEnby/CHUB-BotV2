@@ -38,14 +38,12 @@ class AdminCog(commands.Cog):
         self,
         inter: disnake.AppCmdInter,
         ign: str = commands.Param(
-            name="ign",
             description="The Minecraft username or UUID to link the member to.",
             min_length=1,
             max_length=32,
             autocomplete=autocomplete.ign,
         ),
         member: disnake.Member = commands.Param(
-            name="member",
             description="The member to verify the Minecraft account to",
         ),
     ):
@@ -85,18 +83,15 @@ class AdminCog(commands.Cog):
         self,
         inter: disnake.AppCmdInter,
         member: disnake.Member = commands.Param(
-            name="member",
             description="The member to bypass the verification process for",
         ),
         ign: str = commands.Param(
-            name="ign",
             description="The Minecraft username or UUID to link the member to.",
             min_length=1,
             max_length=32,
             autocomplete=autocomplete.ign,
         ),
         reason: str = commands.param(
-            name="reason",
             description="A detailed and valid reason for bypassing the verification process.",
         ),
     ):
