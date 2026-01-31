@@ -236,6 +236,24 @@ class ModerationCog(commands.Cog):
             },
             query={"_id": ban["_id"]},
         )
+        embed = disnake.Embed(
+            title="You have been unbanned from Collector's Hub",
+            description="You have been unbanned from Collector's Hub. You may now rejoin the server using the attached invite link.",
+            color=disnake.Color.green(),
+        )
+        embed.add_field(
+            name="Unban Reason",
+            value=f"```\n{reason}\n```",
+        )
+        user_obj = self.UtilsCog.chub.get_member(user) if user else None
+        if user_obj:
+            embed.set_footer(
+                text=f"Unbanned by {user_obj} ({user_obj.id})",
+                icon_url=user_obj.display_avatar.url,
+            )
+        await self.UtilsCog.safe_dm(
+            target, content=constants.CHUB_INVITE_URL, embed=embed
+        )
 
     @commands.Cog.listener()
     async def on_raw_member_remove(self, payload: disnake.RawGuildMemberRemoveEvent):
