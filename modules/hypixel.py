@@ -130,10 +130,5 @@ class PlayerData:
 
 async def get_player(player: str | mojang.Player) -> PlayerData:
     player = await mojang.get_player(player) if isinstance(player, str) else player
-    if player.name.lower() == "ragingenby":
-        print("get_player(ragingenby), using cached data for testing...")
-        async with aiofiles.open(".ragingenby.json", "r") as f:
-            data = json.loads(await f.read())
-    else:
-        data = await get("/player", uuid=player.uuid)
+    data = await get("/player", uuid=player.uuid)
     return PlayerData(data, mojang_player=player)
