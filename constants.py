@@ -32,6 +32,7 @@ RANK_ROLES: dict[str, int] = {
     "YOUTUBER": 1466638885563011227,
     "STAFF": 1466638948079112386,
 }
+VERIFIED_ONLY_ROLES: set[int] = {VERIFIED_ROLE_ID} | set(RANK_ROLES.values())
 
 # URLs
 MC_AVATAR_URL: str = "http://cravatar.eu/helmavatar/{}.png"

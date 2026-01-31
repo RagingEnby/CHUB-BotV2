@@ -129,6 +129,21 @@ class LinkingCog(commands.Cog):
             roles.append(disnake.Object(constants.RANK_ROLES[player.rank]))
         return roles
 
+    async def unverify_member(self, member: disnake.Member):
+        tasks = []
+        to_remove: list[disnake.Role] = [
+            role for role in member.roles if role.id in constants.VERIFIED_ONLY_ROLES
+        ]
+        if to_remove:
+            tasks.append(member.remove_roles(*to_remove, reason="Unverified"))
+        if member.nick:
+            tasks.append(member.edit(nick=None, reason="Unverified"))
+        if tasks:
+            try:
+                await asyncio.gather(*tasks)
+            except disnake.errors.Forbidden:
+                print(f"Lacking permissions to unverify member: {member.id}")
+
     async def update_member(
         self,
         member: disnake.Member,
@@ -137,7 +152,7 @@ class LinkingCog(commands.Cog):
         if player is None:
             doc = await self.search_verification(discord_id=member.id)
             if doc is None:
-                raise self.UnverifiedError(member.id)
+                return await self.unverify_member(member)
             player = await mojang.get_player(doc["uuid"])
         if isinstance(player, mojang.Player):
             player = await hypixel.get_player(player)
