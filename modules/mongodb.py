@@ -21,7 +21,7 @@ class Collection:
     async def get_collection(self) -> AsyncIOMotorCollection:
         if self._collection is None:
             client = await self.get_client()
-            self._collection = client[self.db_name][self.collection_name]
+            self._collection = client[self.constants.DB_NAME][self.collection_name]
         return self._collection
 
     def close(self):

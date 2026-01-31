@@ -41,3 +41,8 @@ UUID_REGEX: str = (
     r"^(?:[0-9a-fA-F]{32}|[0-9a-fA-F]{8}(?:-[0-9a-fA-F]{4}){3}-[0-9a-fA-F]{12})$"
 )
 USERNAME_REGEX: str = r"^[A-Za-z0-9_]{3,16}$"
+
+# MongoDB
+DB_NAME: str = "CHUB"
+LINKED_COLLECTION_NAME: str = "linked_members"
+BAN_COLLECTION_NAME: str = "bans"

@@ -27,7 +27,7 @@ class LinkingCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
         self.task: asyncio.Task | None = None
-        self.linked_users_db = mongodb.Collection("CHUB", "linked_members")
+        self.linked_users_db = mongodb.Collection(constants.LINKED_COLLECTION_NAME)
 
     @property
     def UtilsCog(self) -> "UtilsCog":
