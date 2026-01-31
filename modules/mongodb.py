@@ -65,14 +65,16 @@ class Collection:
         self,
         query: dict[str, Any],
         projection: dict[str, Any] | None = None,
-        limit: int = 50,
+        sort: dict[str, int] | None = None,
+        limit: int | None = None,
     ) -> list[dict[str, Any]]:
         collection = await self.get_collection()
-        return (
-            await collection.find(query, projection=projection)
-            .limit(limit)
-            .to_list(length=limit)
-        )
+        cursor = collection.find(query, projection=projection)
+        if sort:
+            cursor = cursor.sort(sort)
+        if limit:
+            cursor = cursor.limit(limit)
+        return await cursor.to_list(length=limit)
 
     async def delete_one(self, query: dict[str, Any]) -> DeleteResult:
         collection = await self.get_collection()
