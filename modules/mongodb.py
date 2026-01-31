@@ -7,7 +7,8 @@ import constants
 
 
 class Collection:
-    def __init__(self, collection: str):
+    def __init__(self, collection: str, db: str | None = None):
+        self.db_name = db or constants.DB_NAME
         self.collection_name = collection
         self._client: AsyncIOMotorClient | None = None
         self._collection: AsyncIOMotorCollection | None = None
@@ -20,7 +21,7 @@ class Collection:
     async def get_collection(self) -> AsyncIOMotorCollection:
         if self._collection is None:
             client = await self.get_client()
-            self._collection = client[self.constants.DB_NAME][self.collection_name]
+            self._collection = client[self.db_name][self.collection_name]
         return self._collection
 
     def close(self):
