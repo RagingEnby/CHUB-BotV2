@@ -92,7 +92,7 @@ class LoggerCog(commands.Cog):
     async def on_slash_command_error(
         self, inter: disnake.AppCmdInter, e: commands.CommandError
     ):
-        with suppress(disnake.InteractionResponded):
+        with suppress(disnake.InteractionResponded, disnake.HTTPException):
             await inter.response.defer(ephemeral=True)
         error = (
             cast("Exception", e.original)  # type: ignore
