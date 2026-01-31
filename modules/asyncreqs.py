@@ -18,7 +18,7 @@ async def close():
 
 
 async def get(url: str, *args, **kwargs) -> curl.Response:
-    proxy = constants.PROXY if "hypixel.net" in url else None
+    proxy = constants.PROXY if "hypixel.net" in url and constants.PROXY else None
     impersonate: curl.BrowserTypeLiteral | None = "chrome" if proxy else None
     session = await get_session()
     return await session.get(url, *args, **kwargs, proxy=proxy, impersonate=impersonate)
