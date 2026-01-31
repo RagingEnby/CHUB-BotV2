@@ -103,6 +103,19 @@ class LoggerCog(commands.Cog):
                 )
             )
 
+        cooldown = None
+        if isinstance(e, commands.CommandOnCooldown):
+            cooldown = e
+        elif isinstance(error, commands.CommandOnCooldown):
+            cooldown = error
+        if cooldown is not None:
+            return await inter.send(
+                embed=self.UtilsCog.make_error(
+                    title="Cooldown",
+                    description=f"Try again in {cooldown.retry_after:.1f}s.",
+                )
+            )
+
         if isinstance(error, mojang.PlayerNotFound):
             error = cast("mojang.PlayerNotFound", error)
             return await inter.send(

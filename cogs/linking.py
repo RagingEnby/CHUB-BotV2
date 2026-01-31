@@ -239,6 +239,7 @@ class LinkingCog(commands.Cog):
         name="verify",
         description="Verify your Discord account with your Minecraft account",
     )
+    @commands.cooldown(1, 45, commands.BucketType.user)
     async def verify_command(
         self,
         inter: disnake.AppCmdInter,
@@ -255,6 +256,7 @@ class LinkingCog(commands.Cog):
         name="unverify",
         description="Unverify your Discord account from your Minecraft account",
     )
+    @commands.cooldown(1, 45, commands.BucketType.user)
     async def unverify_command(
         self,
         inter: disnake.AppCmdInter,
@@ -274,6 +276,7 @@ class LinkingCog(commands.Cog):
     @commands.slash_command(
         name="update", description="Update your synced roles and display name"
     )
+    @commands.cooldown(1, 45, commands.BucketType.user)
     async def update_command(
         self,
         inter: disnake.AppCmdInter,
