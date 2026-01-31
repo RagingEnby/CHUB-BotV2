@@ -96,6 +96,26 @@ class UtilsCog(commands.Cog):
                 content="Tried to send a message but failed (likely over the 2000 char limit). It has been logged to console instead.",
             )
 
+    async def dm(
+        self, user: disnake.User | disnake.Member | int, *args, **kwargs
+    ) -> disnake.Message:
+        user_id = user if isinstance(user, int) else user.id
+        user_obj = self.chub.get_member(user_id)
+        if user_obj is None:
+            raise ValueError(f"User with ID {user_id} not found")
+        return await user_obj.send(*args, **kwargs)
+
+    async def safe_dm(
+        self, user: disnake.User | disnake.Member | int, *args, **kwargs
+    ) -> disnake.Message | None:
+        try:
+            return await self.dm(user, *args, **kwargs)
+        except disnake.HTTPException as e:
+            print(
+                f"[UtilsCog] Failed to send DM to user {user if isinstance(user, int) else user.id}: {e}"
+            )
+            return None
+
     @staticmethod
     def make_error(title: str, description: str) -> disnake.Embed:
         return disnake.Embed(

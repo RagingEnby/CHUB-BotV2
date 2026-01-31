@@ -33,6 +33,9 @@ RANK_ROLES: dict[str, int] = {
     "STAFF": 1466638948079112386,
 }
 VERIFIED_ONLY_ROLES: set[int] = {VERIFIED_ROLE_ID} | set(RANK_ROLES.values())
+## Invites
+CHUB_INVITE_URL: str = "https://discord.gg/collectors-hub-934240413974417439"
+APPEALS_INVITE_URL: str = "https://discord.gg/6VAAvW7pAm"
 
 # URLs
 MC_AVATAR_URL: str = "http://cravatar.eu/helmavatar/{}.png"

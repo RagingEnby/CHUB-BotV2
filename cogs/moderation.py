@@ -79,12 +79,28 @@ class ModerationCog(commands.Cog):
             default=0,
         ),
     ):
+        embed = disnake.Embed(
+            title="You have been banned from Collector's Hub",
+            description="You have been banned from Collector's Hub. If you have any questions or you would like to appeal your ban, please join the appeals server.",
+            color=disnake.Color.red(),
+        )
+        embed.add_field(
+            name="Ban Reason",
+            value=f"```\n{reason}\n```",
+        )
+        embed.set_footer(
+            text=f"Banned by {inter.author.name} ({inter.author.id})",
+            icon_url=inter.author.display_avatar.url,
+        )
         await asyncio.gather(
             inter.response.defer(),
-            member.ban(
-                reason=f"[@{inter.author.name} - {inter.author.id}] {reason}",
-                clean_history_duration=delete_messages,
+            self.UtilsCog.safe_dm(
+                member, content=constants.APPEALS_INVITE_URL, embed=embed
             ),
+        )
+        await member.ban(
+            reason=f"[@{inter.author.name} - {inter.author.id}] {reason}",
+            clean_history_duration=delete_messages,
         )
         await self.on_ban(
             target=member.id,
