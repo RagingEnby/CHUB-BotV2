@@ -287,6 +287,10 @@ class LinkingCog(commands.Cog):
             )
         )
 
+    @commands.Cog.listener()
+    async def on_member_join(self, member: disnake.Member):
+        await self.update_member(member=member)
+
     async def main(self):
         while True:
             for member in self.UtilsCog.chub.members:
