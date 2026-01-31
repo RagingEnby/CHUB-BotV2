@@ -202,6 +202,10 @@ class ModerationCog(commands.Cog):
         )
         if ban is None:
             raise Exception(f"Could not find ban entry for {target}")
+
+        # avoid duplicate calling of on_unabn
+        if not user and unban and unban.user == self.bot.user.id:
+            return
         await self.ban_db.update(
             {
                 "unban": {
