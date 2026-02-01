@@ -275,11 +275,6 @@ class ModerationCog(commands.Cog):
         date: datetime.datetime | None = None,
         description: str | None = None,
     ):
-        if target_player is None:
-            doc = await self.LinkingCog.search_verification(discord_id=target.id)
-            target_player = doc["uuid"] if doc else None
-        if isinstance(target_player, str):
-            target_player = await mojang.get_player(target_player)
         if isinstance(user, int):
             user = self.UtilsCog.chub.get_member(user) or await self.bot.fetch_user(
                 user
@@ -288,8 +283,14 @@ class ModerationCog(commands.Cog):
             target = self.UtilsCog.chub.get_member(target) or await self.bot.fetch_user(
                 target
             )
+        if target_player is None:
+            doc = await self.LinkingCog.search_verification(discord_id=target.id)
+            target_player = doc["uuid"] if doc else None
+        if isinstance(target_player, str):
+            target_player = await mojang.get_player(target_player)
+
         embed = disnake.Embed(
-            title=self.verbify_punishment(action),
+            title=f"{target} was {self.verbify_punishment(action)}!",
             color=(
                 disnake.Color.green()
                 if action in {PunishmentType.UNBAN, PunishmentType.UNMUTE}
@@ -298,19 +299,19 @@ class ModerationCog(commands.Cog):
             timestamp=date or datetime.datetime.now(),
             description=description,
         )
+        embed.set_thumbnail(url=target_player.avatar)
         if user:
-            embed.set_author(
-                name=f"{user} ({user.id})",
+            embed.set_footer(
+                text=f"Moderator: {user.display_name} ({user.id})",
                 icon_url=user.display_avatar.url,
-                url=constants.DISCORD_USER_URL.format(user.id),
             )
         else:
-            embed.set_author(name="Unknown Moderator")
+            embed.set_footer(text="Moderator: Unknown")
         embed.add_field(
             name="User",
             value=self.UtilsCog.to_markdown(
                 {
-                    "Discord": f"<@{target.mention}> (`@{target}` **-** [{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
+                    "Discord": f"{target.mention} (`@{target}` **-** [{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
                     "Minecraft": (
                         f"{disnake.utils.escape_markdown(target_player.name)} ([{target_player.uuid}]({target_player.namemc}))"
                         if target_player
@@ -319,9 +320,9 @@ class ModerationCog(commands.Cog):
                 },
                 block=False,
             ),
-            inline=True,
+            inline=False,
         )
-        embed.add_field(name="Reason", value=f"```\n{reason}\n```", inline=True)
+        embed.add_field(name="Reason", value=f"```\n{reason}\n```", inline=False)
         await self.UtilsCog.send_message(
             channel_id=constants.PUNISHMENT_LOG_CHANNEL_ID,
             embed=embed,
