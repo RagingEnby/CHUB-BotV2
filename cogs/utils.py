@@ -110,7 +110,12 @@ class UtilsCog(commands.Cog):
     ) -> disnake.Message | None:
         try:
             return await self.dm(user, *args, **kwargs)
-        except disnake.HTTPException as e:
+        except (
+            disnake.HTTPException,
+            disnake.NotFound,
+            ValueError,
+            commands.MemberNotFound,
+        ) as e:
             print(
                 f"[UtilsCog] Failed to send DM to user {user if isinstance(user, int) else user.id}: {e}"
             )
