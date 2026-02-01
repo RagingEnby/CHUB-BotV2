@@ -54,7 +54,9 @@ class LoggerCog(commands.Cog):
     async def log_error(self, e: Exception | str, embed: disnake.Embed | None = None):
         error = self.format_error(e) if isinstance(e, Exception) else e
         print("[LoggerCog]", e)
-        embed = embed or disnake.Embed(title=str(e), color=disnake.Color.red())
+        embed = embed or disnake.Embed(
+            title=self._truncate_block(str(e), 25), color=disnake.Color.red()
+        )
         embed.title = "❌ Error: " + (embed.title or "")
         embed.description = f"```py\n{self._truncate_block(error), 1800 - len(embed.description or '')}\n```"
         await self._send_error_embed(embed)
