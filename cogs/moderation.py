@@ -200,11 +200,19 @@ class ModerationCog(commands.Cog):
             member.current_timeout
             or datetime.datetime.now() + datetime.timedelta(seconds=duration)
         )
-        await inter.send(
-            embed=self.UtilsCog.make_success(
-                title="Muted",
-                description=f"The user has been muted from Collector's Hub, they will be unmuted {disnake.utils.format_dt(unmute_at, 'R')}",
-            )
+        await asyncio.gather(
+            inter.send(
+                embed=self.UtilsCog.make_success(
+                    title="Muted",
+                    description=f"The user has been muted from Collector's Hub, they will be unmuted {disnake.utils.format_dt(unmute_at, 'R')}",
+                )
+            ),
+            self.log_mod_action(
+                action=PunishmentType.MUTE,
+                user=inter.author.id,
+                target=member.id,
+                reason=reason,
+            ),
         )
 
     @commands.slash_command(name="unmute", description="Unmute a member")
@@ -229,11 +237,19 @@ class ModerationCog(commands.Cog):
                 duration=None, reason=self.format_audit_reason(inter.author, reason)
             ),
         )
-        await inter.send(
-            embed=self.UtilsCog.make_success(
-                title="Unmuted",
-                description="The user has been unmuted from Collector's Hub",
-            )
+        await asyncio.gather(
+            inter.send(
+                embed=self.UtilsCog.make_success(
+                    title="Unmuted",
+                    description="The user has been unmuted from Collector's Hub",
+                )
+            ),
+            self.log_mod_action(
+                action=PunishmentType.UNMUTE,
+                user=inter.author.id,
+                target=member.id,
+                reason=reason,
+            ),
         )
 
     async def search_ban(self, discord_id: int) -> BanDoc | None:
@@ -273,7 +289,6 @@ class ModerationCog(commands.Cog):
         target_player: mojang.Player | str | None = None,
         reason: str | None = None,
         date: datetime.datetime | None = None,
-        description: str | None = None,
     ):
         if isinstance(user, int):
             user = self.UtilsCog.chub.get_member(user) or await self.bot.fetch_user(
@@ -289,6 +304,23 @@ class ModerationCog(commands.Cog):
         if isinstance(target_player, str):
             target_player = await mojang.get_player(target_player)
 
+        description: list[str] = []
+        if (
+            isinstance(target, disnake.Member)
+            and target.current_timeout
+            and PunishmentType.MUTE == action
+        ):
+            description.append(
+                f"Mute expires {disnake.utils.format_dt(target.current_timeout, 'R')}\n"
+            )
+        description.append(
+            f"__Discord:__ {target.mention} ([{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))"
+        )
+        description.append(
+            f"__Minecraft:__ `{target_player.name}` ([{target_player.uuid}]({target_player.namemc}))"
+            if target_player
+            else ""
+        )
         embed = disnake.Embed(
             title=f"{target} was {self.verbify_punishment(action)}!",
             color=(
@@ -297,18 +329,7 @@ class ModerationCog(commands.Cog):
                 else disnake.Color.red()
             ),
             timestamp=date or datetime.datetime.now(),
-            description=(description + "\n\n" if description else "")
-            + self.UtilsCog.to_markdown(
-                {
-                    "Discord": f"{target.mention} ([{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
-                    "Minecraft": (
-                        f"`{target_player.name}` ([{target_player.uuid}]({target_player.namemc}))"
-                        if target_player
-                        else "`Not Verified`"
-                    ),
-                },
-                block=False,
-            ),
+            description="\n".join(description),
         )
         embed.set_thumbnail(
             target_player.skin
@@ -483,9 +504,6 @@ class ModerationCog(commands.Cog):
                 target_player=None,
                 reason=entry.reason,
                 date=entry.created_at,
-                description=f"Mute expires {disnake.utils.format_dt(after, 'R')}"
-                if action == PunishmentType.MUTE
-                else None,
             )
 
     async def close(self):
