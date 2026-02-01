@@ -1,4 +1,5 @@
 import asyncio
+import signal
 import textwrap
 import traceback
 from typing import TYPE_CHECKING, cast
@@ -48,6 +49,11 @@ UtilsCog: UtilsCogType = cast("UtilsCogType", bot.get_cog("UtilsCog"))
 
 @bot.event
 async def on_ready():
+    def signal_handler(*_):
+        asyncio.create_task(close())
+
+    signal.signal(signal.SIGINT, signal_handler)
+    signal.signal(signal.SIGTERM, signal_handler)
     print(f"Logged in as {bot.user}")
 
 
@@ -116,11 +122,4 @@ async def exec_cmd(inter: commands.Context, *, code: str = ""):
 
 
 if __name__ == "__main__":
-    async def main():
-        try:
-            await bot.start(constants.BOT_TOKEN)
-        finally:
-            with suppress(asyncio.CancelledError):
-                await asyncio.shield(close())
-
-    asyncio.run(main())
+    bot.run(constants.BOT_TOKEN)
