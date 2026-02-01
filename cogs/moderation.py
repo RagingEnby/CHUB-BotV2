@@ -224,8 +224,7 @@ class ModerationCog(commands.Cog):
         print(f"on_unban(target={target}, user={user}, reason={reason})")
         unban = await self.find_audit_entry(target, BanUpdateType.UNBAN)
         # avoid duplicate calling of on_unban
-        if not user and unban and unban.user == self.bot.user.id:
-            print("Ignoring duplicate on_unban() call")
+        if not user and unban and unban.user and unban.user.id == self.bot.user.id:
             return
 
         ban = await self.search_ban(discord_id=target)
