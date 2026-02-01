@@ -2,6 +2,7 @@ import asyncio
 import signal
 import textwrap
 import traceback
+import unicodedata
 from typing import TYPE_CHECKING, cast
 import disnake
 from disnake.ext import commands
@@ -99,6 +100,11 @@ async def exec_cmd(inter: commands.Context, *, code: str = ""):
             .replace("”", '"')
             .replace("’", "'")
             .replace("‘", "'")
+        )
+        raw = "".join(
+            ch
+            for ch in raw
+            if ch in "\n\t" or not unicodedata.category(ch).startswith(("C", "Z"))
         )
         if raw.startswith("```"):
             raw = raw.partition("\n")[2].rsplit("```", 1)[0]
