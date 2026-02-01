@@ -258,8 +258,11 @@ class ModerationCog(commands.Cog):
         target: int,
         user: int | None = None,
         reason: str | None = None,
+        audit_entry: disnake.AuditLogEntry | None = None,
     ):
-        audit_entry = await self.find_audit_entry(target, BanUpdateType.BAN)
+        audit_entry = audit_entry or await self.find_audit_entry(
+            target, BanUpdateType.BAN
+        )
         if not audit_entry:
             raise Exception(f"Could not find ban audit log entry for {target}")
 
@@ -298,11 +301,19 @@ class ModerationCog(commands.Cog):
         target: int,
         user: int | None = None,
         reason: str | None = None,
+        audit_entry: disnake.AuditLogEntry | None = None,
     ):
         print(f"on_unban(target={target}, user={user}, reason={reason})")
-        unban = await self.find_audit_entry(target, BanUpdateType.UNBAN)
+        audit_entry = audit_entry or await self.find_audit_entry(
+            target, BanUpdateType.UNBAN
+        )
         # avoid duplicate calling of on_unban
-        if not user and unban and unban.user and unban.user.id == self.bot.user.id:
+        if (
+            not user
+            and audit_entry
+            and audit_entry.user
+            and audit_entry.user.id == self.bot.user.id
+        ):
             return
 
         ban = await self.search_ban(discord_id=target)
@@ -312,12 +323,16 @@ class ModerationCog(commands.Cog):
         await self.ban_db.update(
             {
                 "unban": {
-                    "id": unban.id if unban else None,
+                    "id": audit_entry.id if audit_entry else None,
                     "unbannedBy": (
-                        user or unban.user.id if unban and unban.user else None
+                        user or audit_entry.user.id
+                        if audit_entry and audit_entry.user
+                        else None
                     ),
-                    "reason": reason or unban.reason if unban else None,
-                    "date": unban.created_at if unban else datetime.datetime.now(),
+                    "reason": reason or audit_entry.reason if audit_entry else None,
+                    "date": audit_entry.created_at
+                    if audit_entry
+                    else datetime.datetime.now(),
                 }
             },
             query={"_id": ban["_id"]},
@@ -342,16 +357,13 @@ class ModerationCog(commands.Cog):
         )
 
     @commands.Cog.listener()
-    async def on_raw_member_remove(self, payload: disnake.RawGuildMemberRemoveEvent):
-        if payload.guild_id != constants.GUILD_ID:
+    async def on_audit_log_entry_create(self, entry: disnake.AuditLogEntry):
+        if (entry.user and entry.user.id == self.bot.user.id) or not entry.target:
             return
-        await self.on_ban(payload.user.id)
-
-    @commands.Cog.listener()
-    async def on_member_unban(self, guild: disnake.Guild, user: disnake.User):
-        if guild.id != constants.GUILD_ID:
-            return
-        await self.on_unban(user.id)
+        if entry.action == disnake.AuditLogAction.ban:
+            await self.on_ban(target=int(entry.target.id), audit_entry=entry)
+        elif entry.action == disnake.AuditLogAction.unban:
+            await self.on_unban(target=int(entry.target.id), audit_entry=entry)
 
     async def close(self):
         await self.ban_db.close()
