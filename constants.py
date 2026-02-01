@@ -40,6 +40,7 @@ APPEALS_INVITE_URL: str = "https://discord.gg/6VAAvW7pAm"
 
 # URLs
 MC_AVATAR_URL: str = "http://cravatar.eu/helmavatar/{}.png"
+MC_SKIN_URL: str = "https://vzge.me/full/832/{}.png?y=-40"
 NAMEMC_URL: str = "https://nmc.is/{}"
 MOJANG_API_URL: str = "https://mowojang.matdoes.dev/{}"
 IGN_STEM_URL: str = "https://api.ragingenby.dev/stem/{}"
