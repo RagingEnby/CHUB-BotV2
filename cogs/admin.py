@@ -63,6 +63,9 @@ class AdminCog(commands.Cog):
     ):
         await self.LinkingCog.do_update_command(inter=inter, member=member)
 
+    # the only way to add spaces in slash command names is to use a sub group. the only way to add spaces in
+    # sub command names is to use a sub GROUP. so we make a group "force" just so we can make the command name
+    # be "/admin force verify"
     @admin.sub_command_group(
         name="force", description="Force admin verification actions"
     )
