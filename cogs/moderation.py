@@ -150,30 +150,36 @@ class ModerationCog(commands.Cog):
             description="The reason for the unban. Please write a concise, well though out reason"
         ),
     ):
+        await inter.response.defer()
         try:
             await self.UtilsCog.chub.unban(
                 user, reason=self.format_audit_reason(inter.author, reason)
             )
         except disnake.NotFound as e:
-            return await inter.response.send_message(
+            return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Ban Not Found",
                     description=f"Unable to find the user's ban (`{e}`)",
                 )
             )
+        await self.on_unban(
+            target=user.id,
+            user=inter.author.id,
+            reason=reason,
+        )
         await asyncio.gather(
-            inter.response.defer(),
-            self.on_unban(
-                target=user.id,
+            inter.send(
+                embed=self.UtilsCog.make_success(
+                    title="Unbanned",
+                    description="The user has been unbanned from Collector's Hub",
+                )
+            ),
+            self.log_mod_action(
+                action=PunishmentType.UNBAN,
                 user=inter.author.id,
+                target=user.id,
                 reason=reason,
             ),
-        )
-        await inter.send(
-            embed=self.UtilsCog.make_success(
-                title="Unbanned",
-                description="The user has been unbanned from Collector's Hub",
-            )
         )
 
     @moderation.sub_command(name="mute", description="Mute a member")
@@ -467,17 +473,8 @@ class ModerationCog(commands.Cog):
                 text=f"Unbanned by {user_obj} ({user_obj.id})",
                 icon_url=user_obj.display_avatar.url,
             )
-        await asyncio.gather(
-            self.UtilsCog.safe_dm(
-                target, content=constants.CHUB_INVITE_URL, embed=embed
-            ),
-            self.log_mod_action(
-                action=PunishmentType.UNBAN,
-                user=user,
-                target=target,
-                target_player=ban["uuid"],
-                reason=reason,
-            ),
+        await self.UtilsCog.safe_dm(
+            target, content=constants.CHUB_INVITE_URL, embed=embed
         )
 
     @commands.Cog.listener()
