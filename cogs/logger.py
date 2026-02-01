@@ -12,10 +12,6 @@ from modules import mojang, hypixel
 import constants
 
 
-def format_error(e: Exception) -> str:
-    return "".join(traceback.format_exception(type(e), e, e.__traceback__))
-
-
 class LoggerCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
         self.bot = bot
@@ -29,6 +25,10 @@ class LoggerCog(commands.Cog):
     @property
     def LinkingCog(self) -> "LinkingCog":
         return cast("LinkingCog", self.bot.get_cog("LinkingCog"))
+
+    @staticmethod
+    def format_error(e: Exception) -> str:
+        return "".join(traceback.format_exception(type(e), e, e.__traceback__))
 
     @staticmethod
     def _truncate_block(text: str, limit: int = 1800) -> str:
@@ -51,42 +51,36 @@ class LoggerCog(commands.Cog):
                 embed=embed,
             )
 
-    async def log_interaction_error(self, inter: disnake.AppCmdInter, e: Exception):
-        error = format_error(e)
-        print("[LoggerCog]", error)
-        embed = self.UtilsCog.inter_to_embed(inter)
-        embed.description = f"```py\n{self._truncate_block(error)}\n```"
+    async def log_error(self, e: Exception | str, embed: disnake.Embed | None = None):
+        error = self.format_error(e) if isinstance(e, Exception) else e
+        print("[LoggerCog]", e)
+        embed = embed or disnake.Embed(title=str(e), color=disnake.Color.red())
         embed.title = "❌ Error: " + (embed.title or "")
-        embed.color = disnake.Color.red()
+        embed.description = f"```py\n{self._truncate_block(error), 1800 - len(embed.description or '')}\n```"
         await self._send_error_embed(embed)
 
+    async def log_interaction_error(self, inter: disnake.AppCmdInter, e: Exception):
+        await self.log_error(e=e, embed=self.UtilsCog.inter_to_embed(inter))
+
     async def log_message_command_error(self, ctx: commands.Context, e: Exception):
-        error = format_error(e)
-        print("[LoggerCog]", error)
         embed = self.UtilsCog.message_to_embed(ctx.message)
         if ctx.command:
             embed.title = ctx.command.qualified_name
-        embed.description = (
-            f"{embed.description or ''}\n```py\n{self._truncate_block(error)}\n```"
-        )
-        embed.title = "❌ Error: " + (embed.title or "command")
-        embed.color = disnake.Color.red()
-        await self._send_error_embed(embed)
+        await self.log_error(e=e, embed=embed)
 
     async def log_event_error(self, event: str, error: str, args, kwargs):
-        print("[LoggerCog]", error)
-        description = (
-            f"**Event:** `{event}`\n"
-            f"**Args:** `{self._truncate_block(str(args), 400)}`\n"
-            f"**Kwargs:** `{self._truncate_block(str(kwargs), 400)}`\n"
-            f"```py\n{self._truncate_block(error)}\n```"
-        )
+        print(f"event={event}\nargs={args}\nkwargs={kwargs}")
         embed = disnake.Embed(
-            title="❌ Error: event handler",
-            description=description,
-            color=disnake.Color.red(),
+            title=f"[{event}] event handler",
+            description=self.UtilsCog.to_markdown(
+                {
+                    "Event": event,
+                    "Args": self._truncate_block(str(args), 400),
+                    "Kwargs": self._truncate_block(str(kwargs), 400),
+                }
+            ),
         )
-        await self._send_error_embed(embed)
+        await self.log_error(e=error, embed=embed)
 
     @commands.Cog.listener()
     async def on_slash_command_error(
