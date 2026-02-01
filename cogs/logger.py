@@ -177,13 +177,13 @@ class LoggerCog(commands.Cog):
                     description=f"Hypixel is currently rate limiting our API key, please try again {disnake.utils.format_dt(datetime.datetime.now() + error.retry, 'R')}.",
                 )
             )
-            
+
         if isinstance(error, commands.MemberNotFound):
             error = cast("commands.MemberNotFound", error)
             return await inter.send(
                 embed=self.UtilsCog.make_error(
                     title="Member Not Found",
-                    description=f"The member you are trying to target was not found (`{error.identifier}`)",
+                    description=f"The member you are trying to target was not found (`{error.argument}`)",
                 )
             )
 
