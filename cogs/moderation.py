@@ -7,7 +7,7 @@ import enum
 
 if TYPE_CHECKING:
     from cogs import UtilsCog, LinkingCog
-from modules import mongodb
+from modules import mongodb, mojang
 import constants
 
 
@@ -31,6 +31,13 @@ class BanDoc(TypedDict):
 class BanUpdateType(enum.Enum):
     BAN = "ban"
     UNBAN = "unban"
+
+
+class PunishmentType(enum.Enum):
+    BAN = "ban"
+    UNBAN = "unban"
+    MUTE = "mute"
+    UNMUTE = "unmute"
 
 
 MESSAGE_CLEAN_TIMES: list[disnake.OptionChoice] = [
@@ -253,6 +260,73 @@ class ModerationCog(commands.Cog):
                 return entry
         return None
 
+    def verbify_punishment(self, action: PunishmentType) -> str:
+        if action in {PunishmentType.BAN, PunishmentType.UNBAN}:
+            return f"{action.value}ed".title()
+        return f"{action.value}d".title()
+
+    async def log_mod_action(
+        self,
+        action: PunishmentType,
+        user: disnake.User | disnake.Member | int | None,
+        target: disnake.User | disnake.Member | int,
+        target_player: mojang.Player | str | None = None,
+        reason: str | None = None,
+        date: datetime.datetime | None = None,
+        description: str | None = None,
+    ):
+        if target_player is None:
+            doc = await self.LinkingCog.search_verification(discord_id=target.id)
+            target_player = doc["uuid"] if doc else None
+        if isinstance(target_player, str):
+            target_player = await mojang.get_player(target_player)
+        if isinstance(user, int):
+            user = self.UtilsCog.chub.get_member(user) or await self.bot.fetch_user(
+                user
+            )
+        if isinstance(target, int):
+            target = self.UtilsCog.chub.get_member(target) or await self.bot.fetch_user(
+                target
+            )
+        embed = disnake.Embed(
+            title=self.verbify_punishment(action),
+            color=(
+                disnake.Color.green()
+                if action in {PunishmentType.UNBAN, PunishmentType.UNMUTE}
+                else disnake.Color.red()
+            ),
+            timestamp=date or datetime.datetime.now(),
+            description=description,
+        )
+        if user:
+            embed.set_author(
+                name=f"{user} ({user.id})",
+                icon_url=user.display_avatar.url,
+                url=constants.DISCORD_USER_URL.format(user.id),
+            )
+        else:
+            embed.set_author(name="Unknown Moderator")
+        embed.add_field(
+            name="User",
+            value=self.UtilsCog.to_markdown(
+                {
+                    "Discord": f"<@{target.mention}> (`@{target}` **-** [{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
+                    "Minecraft": (
+                        f"{disnake.utils.escape_markdown(target_player.name)} ([{target_player.uuid}]({target_player.namemc}))"
+                        if target_player
+                        else "`Not Verified`"
+                    ),
+                },
+                block=False,
+            ),
+            inline=True,
+        )
+        embed.add_field(name="Reason", value=f"```\n{reason}\n```", inline=True)
+        await self.UtilsCog.send_message(
+            channel_id=constants.PUNISHMENT_LOG_CHANNEL_ID,
+            embed=embed,
+        )
+
     async def on_ban(
         self,
         target: int,
@@ -279,22 +353,38 @@ class ModerationCog(commands.Cog):
             return
 
         linked_doc = await self.LinkingCog.search_verification(discord_id=target)
-        await self.ban_db.insert(
-            {
-                "_id": audit_entry.id,
-                "discordId": target,
-                "uuid": linked_doc["uuid"] if linked_doc else None,
-                "date": audit_entry.created_at or datetime.datetime.now(),
-                "bannedBy": user or audit_entry.user.id if audit_entry.user else None,
-                "reason": reason or audit_entry.reason if audit_entry else None,
-                "unban": None,
-            }
-        )
+        uuid = linked_doc["uuid"] if linked_doc else None
+        date = audit_entry.created_at or datetime.datetime.now()
+        tasks = [
+            self.ban_db.insert(
+                {
+                    "_id": audit_entry.id,
+                    "discordId": target,
+                    "uuid": uuid,
+                    "date": date,
+                    "bannedBy": (
+                        user or (audit_entry.user.id if audit_entry.user else None)
+                    ),
+                    "reason": reason or (audit_entry.reason if audit_entry else None),
+                    "unban": None,
+                }
+            ),
+            self.log_mod_action(
+                action=PunishmentType.BAN,
+                user=user,
+                target=target,
+                reason=reason,
+                date=date,
+            ),
+        ]
         if reason is None or not reason.strip():
-            await self.UtilsCog.send_message(
-                channel_id=constants.STAFF_CHANNEL_ID,
-                content=f"<@{user}> You banned user <@{target}> without a ban reason. PLEASE remember to always provide a ban reason.",
+            tasks.append(
+                self.UtilsCog.send_message(
+                    channel_id=constants.STAFF_CHANNEL_ID,
+                    content=f"<@{user}> You banned user <@{target}> without a ban reason. PLEASE remember to always provide a ban reason.",
+                )
             )
+        await asyncio.gather(*tasks)
 
     async def on_unban(
         self,
@@ -325,11 +415,14 @@ class ModerationCog(commands.Cog):
                 "unban": {
                     "id": audit_entry.id if audit_entry else None,
                     "unbannedBy": (
-                        user or audit_entry.user.id
-                        if audit_entry and audit_entry.user
-                        else None
+                        user
+                        or (
+                            audit_entry.user.id
+                            if audit_entry and audit_entry.user
+                            else None
+                        )
                     ),
-                    "reason": reason or audit_entry.reason if audit_entry else None,
+                    "reason": reason or (audit_entry.reason if audit_entry else None),
                     "date": audit_entry.created_at
                     if audit_entry
                     else datetime.datetime.now(),
@@ -352,8 +445,17 @@ class ModerationCog(commands.Cog):
                 text=f"Unbanned by {user_obj} ({user_obj.id})",
                 icon_url=user_obj.display_avatar.url,
             )
-        await self.UtilsCog.safe_dm(
-            target, content=constants.CHUB_INVITE_URL, embed=embed
+        await asyncio.gather(
+            self.UtilsCog.safe_dm(
+                target, content=constants.CHUB_INVITE_URL, embed=embed
+            ),
+            self.log_mod_action(
+                action=PunishmentType.UNBAN,
+                user=user,
+                target=target,
+                target_player=ban["uuid"],
+                reason=reason,
+            ),
         )
 
     @commands.Cog.listener()
@@ -364,6 +466,26 @@ class ModerationCog(commands.Cog):
             await self.on_ban(target=int(entry.target.id), audit_entry=entry)
         elif entry.action == disnake.AuditLogAction.unban:
             await self.on_unban(target=int(entry.target.id), audit_entry=entry)
+        elif entry.action == disnake.AuditLogAction.member_update and (
+            entry.changes.before.timeout or entry.changes.after.timeout
+        ):
+            before = entry.changes.before.timeout
+            after = entry.changes.after.timeout
+            action = PunishmentType.MUTE if after else PunishmentType.UNMUTE
+            print(
+                f"Member {entry.target.id} {self.verbify_punishment(action)} (before={before}, after={after})"
+            )
+            await self.log_mod_action(
+                action=action,
+                user=entry.user.id if entry.user else None,
+                target=int(entry.target.id),
+                target_player=None,
+                reason=entry.reason,
+                date=entry.created_at,
+                description=f"Mute expires {disnake.utils.format_dt(after, 'R')}"
+                if action == PunishmentType.MUTE
+                else None,
+            )
 
     async def close(self):
         await self.ban_db.close()

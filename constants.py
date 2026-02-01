@@ -43,6 +43,7 @@ MC_AVATAR_URL: str = "http://cravatar.eu/helmavatar/{}.png"
 NAMEMC_URL: str = "https://nmc.is/{}"
 MOJANG_API_URL: str = "https://mowojang.matdoes.dev/{}"
 IGN_STEM_URL: str = "https://api.ragingenby.dev/stem/{}"
+DISCORD_USER_URL: str = "https://discord.com/users/{}"
 
 # Regex
 UUID_REGEX: str = (
