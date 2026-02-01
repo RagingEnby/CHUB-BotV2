@@ -261,6 +261,7 @@ class LinkingCog(commands.Cog):
         )
         if not results.deleted_count:
             raise self.UnverifiedError(member.id)
+        await self.update_member(member=member)
         await inter.send(
             embed=self.UtilsCog.make_success(
                 title="Unverified",
