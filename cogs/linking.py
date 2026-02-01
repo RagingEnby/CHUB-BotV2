@@ -330,4 +330,4 @@ class LinkingCog(commands.Cog):
         if self.task is not None and not self.task.done():
             self.task.cancel()
             self.task = None
-        self.linked_users_db.close()
+        await self.linked_users_db.close()

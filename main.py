@@ -4,7 +4,7 @@ import traceback
 from typing import TYPE_CHECKING, cast
 import disnake
 from disnake.ext import commands
-import signal
+from contextlib import suppress
 
 if TYPE_CHECKING:
     from cogs import UtilsCog as UtilsCogType
@@ -48,11 +48,6 @@ UtilsCog: UtilsCogType = cast("UtilsCogType", bot.get_cog("UtilsCog"))
 
 @bot.event
 async def on_ready():
-    def signal_handler(*_):
-        asyncio.create_task(close())
-
-    signal.signal(signal.SIGINT, signal_handler)
-    signal.signal(signal.SIGTERM, signal_handler)
     print(f"Logged in as {bot.user}")
 
 
@@ -121,4 +116,11 @@ async def exec_cmd(inter: commands.Context, *, code: str = ""):
 
 
 if __name__ == "__main__":
-    bot.run(constants.BOT_TOKEN)
+    async def main():
+        try:
+            await bot.start(constants.BOT_TOKEN)
+        finally:
+            with suppress(asyncio.CancelledError):
+                await asyncio.shield(close())
+
+    asyncio.run(main())

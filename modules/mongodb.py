@@ -1,4 +1,5 @@
-from typing import Any
+from typing import Any, Awaitable, cast
+import inspect
 from motor.motor_asyncio import AsyncIOMotorClient, AsyncIOMotorCollection
 from pymongo import UpdateOne
 from pymongo.results import BulkWriteResult, InsertOneResult, DeleteResult, UpdateResult
@@ -24,9 +25,11 @@ class Collection:
             self._collection = client[self.db_name][self.collection_name]
         return self._collection
 
-    def close(self):
+    async def close(self):
         if self._client is not None:
-            self._client.close()
+            result = self._client.close()
+            if inspect.isawaitable(result):
+                await cast(Awaitable[None], result)
             self._client = None
             self._collection = None
 
