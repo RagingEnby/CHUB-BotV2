@@ -43,6 +43,19 @@ MESSAGE_CLEAN_TIMES: list[disnake.OptionChoice] = [
     disnake.OptionChoice(name="Previous 7 Days", value=60 * 60 * 24 * 7),
 ]
 
+MUTE_DURATIONS: list[disnake.OptionChoice] = [
+    disnake.OptionChoice(name="60 Secs", value=60),
+    disnake.OptionChoice(name="5 Mins", value=60 * 5),
+    disnake.OptionChoice(name="10 Mins", value=60 * 10),
+    disnake.OptionChoice(name="1 Hour", value=60 * 60),
+    disnake.OptionChoice(name="2 Hours", value=60 * 60 * 2),
+    disnake.OptionChoice(name="3 Hours", value=60 * 60 * 3),
+    disnake.OptionChoice(name="1 Day", value=60 * 60 * 24),
+    disnake.OptionChoice(name="2 Days", value=60 * 60 * 24 * 2),
+    disnake.OptionChoice(name="3 Days", value=60 * 60 * 24 * 3),
+    disnake.OptionChoice(name="1 Week", value=60 * 60 * 24 * 7),
+]
+
 
 class ModerationCog(commands.Cog):
     def __init__(self, bot: commands.Bot):
@@ -60,6 +73,11 @@ class ModerationCog(commands.Cog):
 
     async def cog_slash_command_check(self, inter: disnake.AppCmdInter) -> bool:
         return self.UtilsCog.is_staff(inter.author)
+
+    def format_audit_reason(
+        self, user: disnake.User | disnake.Member, reason: str
+    ) -> str:
+        return f"[@{user.name} - {user.id}] {reason}"
 
     @commands.slash_command(name="moderation", description="Moderation commands")
     async def moderation(self, _: disnake.AppCmdInter):
@@ -99,7 +117,7 @@ class ModerationCog(commands.Cog):
             ),
         )
         await member.ban(
-            reason=f"[@{inter.author.name} - {inter.author.id}] {reason}",
+            reason=self.format_audit_reason(inter.author, reason),
             clean_history_duration=delete_messages,
         )
         await self.on_ban(
@@ -127,7 +145,7 @@ class ModerationCog(commands.Cog):
     ):
         try:
             await self.UtilsCog.chub.unban(
-                user, reason=f"[@{inter.author.name} - {inter.author.id}] {reason}"
+                user, reason=self.format_audit_reason(inter.author, reason)
             )
         except disnake.NotFound as e:
             return await inter.response.send_message(
@@ -148,6 +166,33 @@ class ModerationCog(commands.Cog):
             embed=self.UtilsCog.make_success(
                 title="Unbanned",
                 description="The user has been unbanned from Collector's Hub",
+            )
+        )
+
+    @moderation.sub_command(name="mute", description="Mute a member")
+    async def mute_command(
+        self,
+        inter: disnake.AppCmdInter,
+        member: disnake.Member = commands.Param(description="The user to mute"),
+        duration: int = commands.Param(
+            description="The duration to mute the user for",
+            choices=MUTE_DURATIONS,
+        ),
+        reason: str = commands.Param(
+            description="The reason for the mute. Please write a concise, well though out reason"
+        ),
+    ):
+        await asyncio.gather(
+            inter.response.defer(),
+            member.timeout(
+                duration=duration,
+                reason=self.format_audit_reason(inter.author, reason),
+            ),
+        )
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Muted",
+                description="The user has been muted from Collector's Hub",
             )
         )
 
