@@ -146,9 +146,9 @@ class UtilsCog(commands.Cog):
         )
 
     @staticmethod
-    def to_markdown(content: dict[str, str | int | bool | None]) -> str:
+    def to_markdown(content: dict[str, str | int | bool | None], block: bool = True) -> str:
         return "\n".join(
-            [f"**{k}:** `{str(v).replace('`', '')}`" for k, v in content.items()]
+            [f"**{k}:** {f'`{str(v).replace('`', '')}`' if block else str(v)}" for k, v in content.items()]
         )
 
     def is_staff(self, member: disnake.Member | disnake.User | int) -> bool:
