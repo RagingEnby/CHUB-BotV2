@@ -125,22 +125,24 @@ class ModerationCog(commands.Cog):
             description="The reason for the unban. Please write a concise, well though out reason"
         ),
     ):
-        await inter.response.defer()
         try:
             await self.UtilsCog.chub.unban(
                 user, reason=f"[@{inter.author.name} - {inter.author.id}] {reason}"
             )
         except disnake.NotFound as e:
-            return await inter.send(
+            return await inter.response.send_message(
                 embed=self.UtilsCog.make_error(
                     title="Ban Not Found",
                     description=f"Unable to find the user's ban (`{e}`)",
                 )
             )
-        await self.on_unban(
-            target=user.id,
-            user=inter.author.id,
-            reason=reason,
+        await asyncio.gather(
+            inter.response.defer(),
+            self.on_unban(
+                target=user.id,
+                user=inter.author.id,
+                reason=reason,
+            ),
         )
         await inter.send(
             embed=self.UtilsCog.make_success(
@@ -220,16 +222,16 @@ class ModerationCog(commands.Cog):
         reason: str | None = None,
     ):
         print(f"on_unban(target={target}, user={user}, reason={reason})")
-        ban, unban = await asyncio.gather(
-            self.search_ban(discord_id=target),
-            self.find_audit_entry(target, BanUpdateType.UNBAN),
-        )
-        if ban is None:
-            raise Exception(f"Could not find ban entry for {target}")
-
-        # avoid duplicate calling of on_unabn
+        unban = await self.find_audit_entry(target, BanUpdateType.UNBAN)
+        # avoid duplicate calling of on_unban
         if not user and unban and unban.user == self.bot.user.id:
+            print("Ignoring duplicate on_unban() call")
             return
+
+        ban = await self.search_ban(discord_id=target)
+        if ban is None:
+            raise Exception(f"Could not find mongo ban entry for {target}")
+
         await self.ban_db.update(
             {
                 "unban": {
@@ -275,4 +277,4 @@ class ModerationCog(commands.Cog):
         await self.on_unban(user.id)
 
     async def close(self):
-        self.ban_db.close()
+        await self.ban_db.close()
