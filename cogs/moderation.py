@@ -38,6 +38,7 @@ class ModAction(enum.Enum):
     UNBAN = "unban"
     MUTE = "mute"
     UNMUTE = "unmute"
+    BYPASS_VERIFICATION = "bypass_verification"
 
 
 MESSAGE_CLEAN_TIMES: list[disnake.OptionChoice] = [
