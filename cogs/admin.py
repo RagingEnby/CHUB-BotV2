@@ -50,6 +50,19 @@ class AdminCog(commands.Cog):
         await self.LinkingCog.do_verify_command(inter, ign, member)
 
     @admin.sub_command(
+        name="unverify",
+        description="Unverify a Minecraft account from a Discord account",
+    )
+    async def unverify_command(
+        self,
+        inter: disnake.AppCmdInter,
+        member: disnake.Member = commands.Param(
+            description="The member to unverify the Minecraft account from",
+        ),
+    ):
+        await self.LinkingCog.do_unverify_command(inter, member)
+
+    @admin.sub_command(
         name="update",
         description="Update a member's synced roles and display name",
     )
