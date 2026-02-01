@@ -5,7 +5,7 @@ import asyncio
 
 if TYPE_CHECKING:
     from cogs import LinkingCog, UtilsCog, ModerationCog
-from moderation import ModAction
+from cogs.moderation import ModAction
 from modules import autocomplete, mojang
 
 
