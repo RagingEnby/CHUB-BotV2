@@ -41,6 +41,23 @@ class ModAction(enum.Enum):
     BYPASS_VERIFICATION = "bypass_verification"
 
 
+class ModActionInfo(TypedDict):
+    color: disnake.Color
+    verb: str
+
+
+MOD_ACTION_INFO: dict[ModAction, ModActionInfo] = {
+    ModAction.BAN: {"color": disnake.Color.red(), "verb": "Was Banned"},
+    ModAction.UNBAN: {"color": disnake.Color.green(), "verb": "Was Unbanned"},
+    ModAction.MUTE: {"color": disnake.Color.yellow(), "verb": "Was Muted"},
+    ModAction.UNMUTE: {"color": disnake.Color.green(), "verb": "Was Unmuted"},
+    ModAction.BYPASS_VERIFICATION: {
+        "color": disnake.Color.purple(),
+        "verb": "Bypassed Verification",
+    },
+}
+
+
 MESSAGE_CLEAN_TIMES: list[disnake.OptionChoice] = [
     disnake.OptionChoice(name="Don't Delete Any", value=0),
     disnake.OptionChoice(name="Previous Hour", value=60 * 60),
@@ -283,13 +300,6 @@ class ModerationCog(commands.Cog):
                 return entry
         return None
 
-    def verbify_mod_action(self, action: ModAction) -> str:
-        if action == ModAction.BYPASS_VERIFICATION:
-            return "Bypassed Verification"
-        if action in {ModAction.BAN, ModAction.UNBAN}:
-            return f"was {action.value}ned".title()
-        return f"was {action.value}d".title()
-
     async def log_mod_action(
         self,
         action: ModAction,
@@ -331,12 +341,8 @@ class ModerationCog(commands.Cog):
             else ""
         )
         embed = disnake.Embed(
-            title=f"{target} {self.verbify_mod_action(action)}!",
-            color=(
-                disnake.Color.green()
-                if action in {ModAction.UNBAN, ModAction.UNMUTE}
-                else disnake.Color.red()
-            ),
+            title=f"{target} {MOD_ACTION_INFO[action]['verb']}!",
+            color=MOD_ACTION_INFO[action]["color"],
             timestamp=date or datetime.datetime.now(),
             description="\n".join(description),
         )
