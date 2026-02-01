@@ -6,7 +6,6 @@ import unicodedata
 from typing import TYPE_CHECKING, cast
 import disnake
 from disnake.ext import commands
-from contextlib import suppress
 
 if TYPE_CHECKING:
     from cogs import UtilsCog as UtilsCogType
@@ -104,7 +103,7 @@ async def exec_cmd(inter: commands.Context, *, code: str = ""):
         raw = "".join(
             ch
             for ch in raw
-            if ch in "\n\t" or not unicodedata.category(ch).startswith(("C", "Z"))
+            if ch in "\n\t" or not unicodedata.category(ch).startswith("C")
         )
         if raw.startswith("```"):
             raw = raw.partition("\n")[2].rsplit("```", 1)[0]
