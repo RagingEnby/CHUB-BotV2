@@ -1,6 +1,6 @@
 import asyncio
 import datetime
-from typing import Literal, TypedDict
+from typing import Literal, NotRequired, TypedDict
 from disnake.ext import commands
 import disnake
 from typing import TYPE_CHECKING, Any, cast
@@ -20,7 +20,8 @@ class LinkedUserDoc(TypedDict):
     uuid: str
     date: datetime.datetime
     source: LinkSource
-    manualReason: str | None
+    manualReason: NotRequired[str]
+    betaTester: NotRequired[bool]
 
 
 class LinkingCog(commands.Cog):
@@ -86,16 +87,15 @@ class LinkingCog(commands.Cog):
             raise ValueError("manual_reason can only be provided if source is 'manual'")
         if manual_reason is None and source == "manual":
             raise ValueError("manual_reason must be provided if source is 'manual'")
-        await self.linked_users_db.update(
-            {
-                "_id": discord_id,
-                "uuid": uuid,
-                "source": source,
-                "date": date or datetime.datetime.now(),
-                "manualReason": manual_reason,
-            },
-            upsert=True,
-        )
+        data: LinkedUserDoc = {
+            "_id": discord_id,
+            "uuid": uuid,
+            "source": source,
+            "date": date or datetime.datetime.now(),
+        }
+        if manual_reason is not None:
+            data["manualReason"] = manual_reason
+        await self.linked_users_db.update(data, upsert=True)  # type: ignore
 
     def make_verification_query(
         self, discord_id: int | None = None, uuid: str | None = None
