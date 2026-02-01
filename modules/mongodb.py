@@ -50,7 +50,7 @@ class Collection:
         self, *documents: dict[str, Any]
     ) -> InsertOneResult | BulkWriteResult:
         collection = await self.get_collection()
-        if len(documents) > 1:
+        if len(documents) == 1:
             return await collection.insert_one(documents[0])
         operations = [
             UpdateOne({"_id": document["_id"]}, {"$set": document}, upsert=True)
