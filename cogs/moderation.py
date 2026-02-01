@@ -284,9 +284,11 @@ class ModerationCog(commands.Cog):
         return None
 
     def verbify_mod_action(self, action: ModAction) -> str:
+        if action == ModAction.BYPASS_VERIFICATION:
+            return "Bypassed Verification"
         if action in {ModAction.BAN, ModAction.UNBAN}:
-            return f"{action.value}ned".title()
-        return f"{action.value}d".title()
+            return f"was {action.value}ned".title()
+        return f"was {action.value}d".title()
 
     async def log_mod_action(
         self,
@@ -329,7 +331,7 @@ class ModerationCog(commands.Cog):
             else ""
         )
         embed = disnake.Embed(
-            title=f"{target} was {self.verbify_mod_action(action)}!",
+            title=f"{target} {self.verbify_mod_action(action)}!",
             color=(
                 disnake.Color.green()
                 if action in {ModAction.UNBAN, ModAction.UNMUTE}
@@ -490,7 +492,9 @@ class ModerationCog(commands.Cog):
             entry.changes.before.timeout or entry.changes.after.timeout
         ):
             await self.log_mod_action(
-                action=ModAction.MUTE if entry.changes.after.timeout else ModAction.UNMUTE,
+                action=ModAction.MUTE
+                if entry.changes.after.timeout
+                else ModAction.UNMUTE,
                 user=entry.user.id if entry.user else None,
                 target=int(entry.target.id),
                 target_player=None,
