@@ -352,7 +352,7 @@ class ModerationCog(commands.Cog):
             embed.set_footer(text="Moderator: Unknown")
         embed.add_field(name="Reason", value=f"```\n{reason}\n```", inline=False)
         await self.UtilsCog.send_message(
-            channel_id=constants.PUNISHMENT_LOG_CHANNEL_ID,
+            channel_id=constants.MOD_LOG_CHANNEL_ID,
             embed=embed,
         )
 
@@ -489,14 +489,8 @@ class ModerationCog(commands.Cog):
         elif entry.action == disnake.AuditLogAction.member_update and (
             entry.changes.before.timeout or entry.changes.after.timeout
         ):
-            before = entry.changes.before.timeout
-            after = entry.changes.after.timeout
-            action = ModAction.MUTE if after else ModAction.UNMUTE
-            print(
-                f"Member {entry.target.id} {self.verbify_mod_action(action)} (before={before}, after={after})"
-            )
             await self.log_mod_action(
-                action=action,
+                action=ModAction.MUTE if entry.changes.after.timeout else ModAction.UNMUTE,
                 user=entry.user.id if entry.user else None,
                 target=int(entry.target.id),
                 target_player=None,
