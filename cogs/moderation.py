@@ -297,9 +297,24 @@ class ModerationCog(commands.Cog):
                 else disnake.Color.red()
             ),
             timestamp=date or datetime.datetime.now(),
-            description=description,
+            description=(description + "\n\n" if description else "")
+            + self.UtilsCog.to_markdown(
+                {
+                    "Discord": f"{target.mention} ([{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
+                    "Minecraft": (
+                        f"`{target_player.name}` ([{target_player.uuid}]({target_player.namemc}))"
+                        if target_player
+                        else "`Not Verified`"
+                    ),
+                },
+                block=False,
+            ),
         )
-        embed.set_thumbnail(url=target_player.avatar)
+        embed.set_thumbnail(
+            target_player.skin
+            if target_player
+            else (user.display_avatar.url if user else None)
+        )
         if user:
             embed.set_footer(
                 text=f"Moderator: {user.display_name} ({user.id})",
@@ -307,21 +322,6 @@ class ModerationCog(commands.Cog):
             )
         else:
             embed.set_footer(text="Moderator: Unknown")
-        embed.add_field(
-            name="User",
-            value=self.UtilsCog.to_markdown(
-                {
-                    "Discord": f"{target.mention} (`@{target}` **-** [{target.id}]({constants.DISCORD_USER_URL.format(target.id)}))",
-                    "Minecraft": (
-                        f"{disnake.utils.escape_markdown(target_player.name)} ([{target_player.uuid}]({target_player.namemc}))"
-                        if target_player
-                        else "`Not Verified`"
-                    ),
-                },
-                block=False,
-            ),
-            inline=False,
-        )
         embed.add_field(name="Reason", value=f"```\n{reason}\n```", inline=False)
         await self.UtilsCog.send_message(
             channel_id=constants.PUNISHMENT_LOG_CHANNEL_ID,
