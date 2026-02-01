@@ -1,24 +1,36 @@
-import asyncio
-import json
-import aiofiles
+from typing import TYPE_CHECKING
+import disnake
 
-from modules import hypixel, asyncreqs
+if TYPE_CHECKING:
+    from main import bot
+    from cogs import LinkingCog as LinkingCogType
+
+inter: disnake.AppCmdInter
 
 
 async def main():
-    try:
-        player = "ragingenby"
-        file_path = f".{player}.json"
-        # data = await hypixel.get_player(player)
-        async with aiofiles.open(file_path, "r") as f:
-            data = hypixel.PlayerData(json.loads(await f.read()))
-        print(data.discord)
+    import datetime
+    import json
+    import aiofiles
+    from typing import cast
+    from cogs.linking import LinkedUserDoc
 
-        async with aiofiles.open(file_path, "w") as f:
-            await f.write(json.dumps(data.data, indent=2))
-    finally:
-        await asyncreqs.close()
+    LinkingCog: LinkingCogType = cast("LinkingCogType", bot.get_cog("LinkingCog"))
 
-
-if __name__ == "__main__":
-    asyncio.run(main())
+    async with aiofiles.open("debug/linkedusers.json", "r") as file:
+        # dict[uuid, discord_id]
+        data: dict[str, str] = json.loads(await file.read())  # type: ignore
+    docs: list[LinkedUserDoc] = [
+        {
+            "_id": int(discord_id),
+            "uuid": uuid,
+            "date": datetime.datetime.fromtimestamp(0),
+            "source": "hypixel",
+            "manualReason": None,
+        }
+        for uuid, discord_id in data.items()
+    ]
+    before = datetime.datetime.now()
+    await LinkingCog.linked_users_db.insert(*docs)  # type: ignore
+    after = datetime.datetime.now()
+    await inter.send(f"Inserted {len(docs)} docs in {after - before} seconds")  # type: ignore
