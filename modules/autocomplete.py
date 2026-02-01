@@ -23,7 +23,7 @@ async def ign(
             ragingenbyapi.search_ign_stem(user_input), timeout=5
         )
     except asyncio.TimeoutError:
-        return [disnake.OptionChoice(name=user_input, value=user_input)]
+        players = []
     return (
         [
             disnake.OptionChoice(name=player.name, value=player.uuid)
