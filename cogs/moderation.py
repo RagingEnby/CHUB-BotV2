@@ -278,7 +278,7 @@ class ModerationCog(commands.Cog):
 
     def verbify_punishment(self, action: PunishmentType) -> str:
         if action in {PunishmentType.BAN, PunishmentType.UNBAN}:
-            return f"{action.value}ed".title()
+            return f"{action.value}ned".title()
         return f"{action.value}d".title()
 
     async def log_mod_action(
