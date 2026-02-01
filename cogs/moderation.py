@@ -33,7 +33,7 @@ class BanUpdateType(enum.Enum):
     UNBAN = "unban"
 
 
-class PunishmentType(enum.Enum):
+class ModAction(enum.Enum):
     BAN = "ban"
     UNBAN = "unban"
     MUTE = "mute"
@@ -175,7 +175,7 @@ class ModerationCog(commands.Cog):
                 )
             ),
             self.log_mod_action(
-                action=PunishmentType.UNBAN,
+                action=ModAction.UNBAN,
                 user=inter.author.id,
                 target=user.id,
                 reason=reason,
@@ -214,7 +214,7 @@ class ModerationCog(commands.Cog):
                 )
             ),
             self.log_mod_action(
-                action=PunishmentType.MUTE,
+                action=ModAction.MUTE,
                 user=inter.author.id,
                 target=member.id,
                 reason=reason,
@@ -251,7 +251,7 @@ class ModerationCog(commands.Cog):
                 )
             ),
             self.log_mod_action(
-                action=PunishmentType.UNMUTE,
+                action=ModAction.UNMUTE,
                 user=inter.author.id,
                 target=member.id,
                 reason=reason,
@@ -282,14 +282,14 @@ class ModerationCog(commands.Cog):
                 return entry
         return None
 
-    def verbify_punishment(self, action: PunishmentType) -> str:
-        if action in {PunishmentType.BAN, PunishmentType.UNBAN}:
+    def verbify_mod_action(self, action: ModAction) -> str:
+        if action in {ModAction.BAN, ModAction.UNBAN}:
             return f"{action.value}ned".title()
         return f"{action.value}d".title()
 
     async def log_mod_action(
         self,
-        action: PunishmentType,
+        action: ModAction,
         user: disnake.User | disnake.Member | int | None,
         target: disnake.User | disnake.Member | int,
         target_player: mojang.Player | str | None = None,
@@ -314,7 +314,7 @@ class ModerationCog(commands.Cog):
         if (
             isinstance(target, disnake.Member)
             and target.current_timeout
-            and PunishmentType.MUTE == action
+            and ModAction.MUTE == action
         ):
             description.append(
                 f"Mute expires {disnake.utils.format_dt(target.current_timeout, 'R')}\n"
@@ -328,10 +328,10 @@ class ModerationCog(commands.Cog):
             else ""
         )
         embed = disnake.Embed(
-            title=f"{target} was {self.verbify_punishment(action)}!",
+            title=f"{target} was {self.verbify_mod_action(action)}!",
             color=(
                 disnake.Color.green()
-                if action in {PunishmentType.UNBAN, PunishmentType.UNMUTE}
+                if action in {ModAction.UNBAN, ModAction.UNMUTE}
                 else disnake.Color.red()
             ),
             timestamp=date or datetime.datetime.now(),
@@ -398,7 +398,7 @@ class ModerationCog(commands.Cog):
                 }
             ),
             self.log_mod_action(
-                action=PunishmentType.BAN,
+                action=ModAction.BAN,
                 user=user,
                 target=target,
                 reason=reason,
@@ -490,9 +490,9 @@ class ModerationCog(commands.Cog):
         ):
             before = entry.changes.before.timeout
             after = entry.changes.after.timeout
-            action = PunishmentType.MUTE if after else PunishmentType.UNMUTE
+            action = ModAction.MUTE if after else ModAction.UNMUTE
             print(
-                f"Member {entry.target.id} {self.verbify_punishment(action)} (before={before}, after={after})"
+                f"Member {entry.target.id} {self.verbify_mod_action(action)} (before={before}, after={after})"
             )
             await self.log_mod_action(
                 action=action,
