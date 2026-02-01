@@ -4,9 +4,9 @@ from typing import TYPE_CHECKING, cast
 import asyncio
 
 if TYPE_CHECKING:
-    from cogs import LinkingCog, UtilsCog
+    from cogs import LinkingCog, UtilsCog, ModerationCog
+from moderation import ModAction
 from modules import autocomplete, mojang
-import constants
 
 
 class AdminCog(commands.Cog):
@@ -20,6 +20,10 @@ class AdminCog(commands.Cog):
     @property
     def UtilsCog(self) -> "UtilsCog":
         return cast("UtilsCog", self.bot.get_cog("UtilsCog"))
+
+    @property
+    def ModerationCog(self) -> "ModerationCog":
+        return cast("ModerationCog", self.bot.get_cog("ModerationCog"))
 
     async def cog_slash_command_check(self, inter: disnake.AppCmdInter) -> bool:
         return await self.bot.is_owner(inter.author)
@@ -115,7 +119,17 @@ class AdminCog(commands.Cog):
             source="manual",
             manual_reason=f"[{inter.author.id}] {reason}",
         )
-        await self.LinkingCog.update_member(member=member)
+        await asyncio.gather(
+            self.LinkingCog.update_member(member=member),
+            self.ModerationCog.log_mod_action(
+                action=ModAction.BYPASS_VERIFICATION,
+                user=inter.author.id,
+                target=member.id,
+                target_player=player,
+                reason=reason,
+                date=inter.created_at,
+            ),
+        )
         await inter.send(
             embed=self.UtilsCog.make_success(
                 title="Verified",
