@@ -189,10 +189,43 @@ class ModerationCog(commands.Cog):
                 reason=self.format_audit_reason(inter.author, reason),
             ),
         )
+        unmute_at = (
+            member.current_timeout
+            or datetime.datetime.now() + datetime.timedelta(seconds=duration)
+        )
         await inter.send(
             embed=self.UtilsCog.make_success(
                 title="Muted",
-                description="The user has been muted from Collector's Hub",
+                description=f"The user has been muted from Collector's Hub, they will be unmuted {disnake.utils.format_dt(unmute_at, 'R')}",
+            )
+        )
+
+    @commands.slash_command(name="unmute", description="Unmute a member")
+    async def unmute_command(
+        self,
+        inter: disnake.AppCmdInter,
+        member: disnake.Member = commands.Param(description="The user to unmute"),
+        reason: str = commands.Param(
+            description="The reason for the unmute. Please write a concise, well though out reason"
+        ),
+    ):
+        if not member.current_timeout:
+            return await inter.response.send_message(
+                embed=self.UtilsCog.make_error(
+                    title="Not Muted",
+                    description="The user is not currently muted",
+                )
+            )
+        await asyncio.gather(
+            inter.response.defer(),
+            member.timeout(
+                duration=None, reason=self.format_audit_reason(inter.author, reason)
+            ),
+        )
+        await inter.send(
+            embed=self.UtilsCog.make_success(
+                title="Unmuted",
+                description="The user has been unmuted from Collector's Hub",
             )
         )
 
