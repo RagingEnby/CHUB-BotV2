@@ -70,17 +70,19 @@ class LoggerCog(commands.Cog):
 
     async def log_event_error(self, event: str, error: str, args, kwargs):
         print(f"event={event}\nargs={args}\nkwargs={kwargs}")
-        embed = disnake.Embed(
-            title=f"[{event}] event handler",
-            description=self.UtilsCog.to_markdown(
-                {
-                    "Event": event,
-                    "Args": self._truncate_block(str(args), 400),
-                    "Kwargs": self._truncate_block(str(kwargs), 400),
-                }
+        await self.log_error(
+            e=self._truncate_block(error, 25),
+            embed=disnake.Embed(
+                title=f"[{event}] event handler",
+                description=self.UtilsCog.to_markdown(
+                    {
+                        "Event": event,
+                        "Args": self._truncate_block(str(args), 400),
+                        "Kwargs": self._truncate_block(str(kwargs), 400),
+                    }
+                ),
             ),
         )
-        await self.log_error(e=error, embed=embed)
 
     @commands.Cog.listener()
     async def on_slash_command_error(
