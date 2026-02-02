@@ -178,6 +178,23 @@ class LinkingCog(commands.Cog):
                 return
                 # print(f"Lacking permissions to update member: {member.id}")
 
+    @commands.slash_command(
+        name="verify",
+        description="Verify your Discord account with your Minecraft account",
+    )
+    @commands.cooldown(1, 45, commands.BucketType.user)
+    async def verify_command(
+        self,
+        inter: disnake.AppCmdInter,
+        ign: str = commands.Param(
+            description="Your Minecraft username or UUID",
+            autocomplete=autocomplete.ign,
+            min_length=1,
+            max_length=32,
+        ),
+    ):
+        await self.do_verify_command(inter=inter, identifier=ign)
+
     async def do_verify_command(
         self,
         inter: disnake.AppCmdInter,
@@ -236,21 +253,15 @@ class LinkingCog(commands.Cog):
         )
 
     @commands.slash_command(
-        name="verify",
-        description="Verify your Discord account with your Minecraft account",
+        name="unverify",
+        description="Unverify your Discord account from your Minecraft account",
     )
     @commands.cooldown(1, 45, commands.BucketType.user)
-    async def verify_command(
+    async def unverify_command(
         self,
         inter: disnake.AppCmdInter,
-        ign: str = commands.Param(
-            description="Your Minecraft username or UUID",
-            autocomplete=autocomplete.ign,
-            min_length=1,
-            max_length=32,
-        ),
     ):
-        await self.do_verify_command(inter=inter, identifier=ign)
+        await self.do_unverify_command(inter=inter)
 
     async def do_unverify_command(
         self, inter: disnake.AppCmdInter, member: disnake.Member | None = None
@@ -270,15 +281,14 @@ class LinkingCog(commands.Cog):
         )
 
     @commands.slash_command(
-        name="unverify",
-        description="Unverify your Discord account from your Minecraft account",
+        name="update", description="Update your synced roles and display name"
     )
     @commands.cooldown(1, 45, commands.BucketType.user)
-    async def unverify_command(
+    async def update_command(
         self,
         inter: disnake.AppCmdInter,
     ):
-        await self.do_unverify_command(inter=inter)
+        await self.do_update_command(inter=inter)
 
     async def do_update_command(
         self, inter: disnake.AppCmdInter, member: disnake.Member | None = None
@@ -294,16 +304,6 @@ class LinkingCog(commands.Cog):
                 description="Your synced roles and display name have been updated.",
             )
         )
-
-    @commands.slash_command(
-        name="update", description="Update your synced roles and display name"
-    )
-    @commands.cooldown(1, 45, commands.BucketType.user)
-    async def update_command(
-        self,
-        inter: disnake.AppCmdInter,
-    ):
-        await self.do_update_command(inter=inter)
 
     @commands.Cog.listener()
     async def on_member_join(self, member: disnake.Member):
