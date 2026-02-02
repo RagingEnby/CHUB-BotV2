@@ -105,6 +105,7 @@ class ModerationCog(commands.Cog):
         return f"[@{user.name} - {user.id}] {reason}"
 
     @commands.slash_command(name="moderation", description="Moderation commands")
+    @commands.cooldown(1, 15, commands.BucketType.user)
     async def moderation(self, _: disnake.AppCmdInter):
         return
 
@@ -157,7 +158,7 @@ class ModerationCog(commands.Cog):
             )
         )
 
-    @moderation.sub_command(name="unban", description="Unban a member")
+    @moderation.sub_command(name="unban", description="Unban a member", guild_ids=[constants.GUILD_ID, constants.APPEALS_GUILD_ID])
     async def unban_command(
         self,
         inter: disnake.AppCmdInter,
